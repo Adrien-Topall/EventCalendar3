@@ -6,6 +6,7 @@ Event Calendar 3 Wordpress plugin by Alex Tingle updated to work with Wordpress 
 **New version**
 
 Vous trouverez ici une nouvelle version en cour de developpement mais fonctionelle.
+
 Nouvelles fonctionalités :
 
 * Gestion des lieux
