@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class ec3_Options
 {
   // Some global variables.
-  var $version='3.2.beta3';
+  var $version='3.4';
   var $myfiles='';
   var $call_count=0;
   var $schedule='ec3_schedule'; // table name
@@ -62,6 +62,9 @@ class ec3_Options
     * Turns off CSS in header. */
   var $nocss=false;
 
+  /** Which postType is used for events? DEFAULT=0 */
+  var $listPostType;
+  
   /** Which category is used for events? DEFAULT=0 */
   var $event_category;
   /** Display event box within post: 0=hide, 1=schedule, 2=iconlet[DEFAULT] */
@@ -70,6 +73,12 @@ class ec3_Options
   var $advanced;
   /** Local timezone. */
   var $tz;
+  /** Key pour Open Agenda */
+  var $OpenAgandaKey;
+  /** Secret Key pour Open Agenda */
+  var $OpenAgandaSecretKey;
+  /** Nom de l'agenda */
+  var $OpenAgandaSlugName;
 
   function ec3_Options()
   {
@@ -77,32 +86,37 @@ class ec3_Options
 
     $mydir=
       preg_replace('%^.*[/\\\\]([^/\\\\]+)[/\\\\]options.php$%','$1',__FILE__);
-    load_plugin_textdomain('ec3','wp-content/plugins/'.$mydir.'/languages');
+    //load_plugin_textdomain('ec3','wp-content/plugins/'.$mydir.'/languages');
+    load_plugin_textdomain('ec3');
 
     $this->myfiles=get_option('siteurl').'/wp-content/plugins/'.$mydir;
     $this->schedule=$table_prefix.$this->schedule; // table name
 
     // wp_version < 2.0
-    if(ereg('^1[.]',$wp_version))
+    if(preg_match('%^1[.]%',$wp_version))
     {
       $this->wp_user_nicename='user_nickname';
       $this->wp_have_dbx=false;
     }
     // wp_version < 2.1
-    if(ereg('^(1[.]|2[.]0)',$wp_version))
+    if(preg_match('%^(1[.]|2[.]0)%',$wp_version))
     {
       $this->wp_in_category='category-';
     }
     // wp_version < 2.3
-    if(ereg('^(1[.]|2[.][012])',$wp_version))
+    if(preg_match('%^(1[.]|2[.][012])%',$wp_version))
     {
       $this->wp_have_categories=true;
     }
 
+    $this->read_listPostType();
     $this->read_event_category();
     $this->read_show_event_box();
     $this->read_advanced();
     $this->read_tz();
+    $this->read_OpenAgandaKey();
+    $this->read_OpenAgandaSecretKey();
+    $this->read_OpenAgandaSlugName();
   }
   
   function reset_query(&$query)
@@ -128,9 +142,25 @@ class ec3_Options
   }
 
   // READ functions
+  function read_OpenAgandaSlugName()
+  {
+    $this->OpenAgandaSlugName = get_option('ec3_OpenAgandaSlugName', 'Slug Name');
+  }
+  function read_OpenAgandaKey()
+  {
+    $this->OpenAgandaKey = get_option('ec3_OpenAgandaKey', '123456');
+  }
+  function read_OpenAgandaSecretKey()
+  {
+    $this->OpenAgandaSecretKey = get_option('ec3_OpenAgandaSecretKey', '123456');
+  }
+  function read_listPostType()
+  {
+    $this->listPostType = get_option('ec3_list_post_type', 'post');
+  }
   function read_event_category()
   {
-    $this->event_category=intval( get_option('ec3_event_category') );
+    $this->event_category = intval( get_option('ec3_event_category') );
   }
   function read_show_event_box()
   {
@@ -149,20 +179,66 @@ class ec3_Options
   }
   function read_tz()
   {
-    $this->tz = get_option('ec3_tz');
+    $this->tz = get_option('ec3_tz', 'wordpress');
     if(empty($this->tz) || $this->tz=='wordpress')
     {
       // Use WordPress default (doesn't understand daylight saving time).
-      $gmt_offset=-intval(get_option('gmt_offset'));
+     /* $gmt_offset=-intval(get_option('gmt_offset'));
       $this->tz='UTC';
       if($gmt_offset>0)
         $this->tz.='+'.$gmt_offset;
       elseif($gmt_offset<0)
-        $this->tz.=$gmt_offset;
+        $this->tz.=$gmt_offset;*/
+       $this->tz = date_default_timezone_set('Europe/Paris');
+
     }
   }
   
   // SET functions
+  function set_OpenAgandaSlugName($val){
+    update_option('ec3_OpenAgandaSlugName',$val);
+    $this->read_OpenAgandaSlugName();
+  }
+  function set_OpenAgandaSecretKey($val){
+    if ( get_option( 'ec3_OpenAgandaSecretKey' ) !== false ) {
+
+      // The option already exists, so we just update it.
+       update_option('ec3_OpenAgandaSecretKey',$val);
+
+    } else {
+        //add_option( 'ec3_list_post_type' );
+        update_option('ec3_OpenAgandaSecretKey',$val);
+    }
+      //update_option('ec3_list_post_type',$val);
+      $this->read_OpenAgandaSecretKey();
+  }
+  function set_OpenAgandaKey($val){
+    if ( get_option( 'ec3_OpenAgandaKey' ) !== false ) {
+
+      // The option already exists, so we just update it.
+       update_option('ec3_OpenAgandaKey',$val);
+
+    } else {
+        //add_option( 'ec3_list_post_type' );
+        update_option('ec3_OpenAgandaKey',$val);
+    }
+      //update_option('ec3_list_post_type',$val);
+      $this->read_OpenAgandaKey();
+  }
+  function set_listPostType($val)
+  {
+    if ( get_option( 'ec3_list_post_type' ) !== false ) {
+
+      // The option already exists, so we just update it.
+       update_option('ec3_list_post_type',$val);
+
+    } else {
+        //add_option( 'ec3_list_post_type' );
+        update_option('ec3_list_post_type',$val);
+    }
+      //update_option('ec3_list_post_type',$val);
+      $this->read_listPostType();
+  }
   function set_event_category($val)
   {
     if($this->event_category!=$val)
@@ -190,13 +266,12 @@ class ec3_Options
   }
   function set_tz($val)
   {
-    if(!preg_match('/(WordPress|[_a-zA-Z\/]+)/',$val))
-      return;
-    if($this->tz!=$val)
-    {
-      update_option('ec3_tz',$val);
-      $this->read_tz();
-    }
+    /*if(!preg_match('/(WordPress|[_a-zA-Z\/]+)/',$val))
+      return;*/
+    
+    update_option('ec3_tz',$val);
+    
+    $this->read_tz();
   }
 } // end class ec3_Options
 
@@ -246,4 +321,3 @@ else
   $ec3_htmlspecialchars = 'ec3_htmlspecialchars';
 }
 
-?>

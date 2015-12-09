@@ -195,7 +195,9 @@ class ec3_BasicCalendar
       $begin_datetime = $this->begin_dateobj->to_mysqldate();
       foreach($p->ec3_schedule as $event)
       {
-        $dob       = ec3_mysql2date( max($event->start,$begin_datetime) );
+        $ev_strat = $event->start;
+        $date_event = max($ev_strat, $begin_datetime);
+        $dob = ec3_mysql2date($date_event);
         // Find $limit_dob - the day after the end of this event.
         $limit_dob = ec3_mysql2date( $event->end );
         $limit_dob->increment_day();
@@ -288,7 +290,7 @@ class ec3_BasicCalendar
 
       while(True)
       {
-        $this->dateobj = clone($curr_dateobj);
+        $this->dateobj = clone $curr_dateobj;
         if($col>6)
         {
           $monthstr .= $this->wrap_week($weekstr,$curr_dateobj);

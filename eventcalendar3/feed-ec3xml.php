@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
-
 require_once(dirname(__FILE__).'/calendar-basic.php');
 
 class ec3_ec3xml extends ec3_BasicCalendar
@@ -47,12 +46,19 @@ class ec3_ec3xml extends ec3_BasicCalendar
 
     $day_id   = $this->dateobj->day_id();
     $date     = $this->dateobj->to_mysqldate();
-    $day_link = $this->dateobj->day_link($this->show_only_events);
-    $result ="<day id='$day_id' date='$date' link='$day_link'";
-    if(!empty($this->dayobj->titles))
-      $result.=" titles='".implode(', ',$this->dayobj->titles)."'";
+    $day_link = $this->dateobj->day_link($this->show_only_events)."&amp;ec3_listing=all";
+    $result ="<day id=\"$day_id\" date=\"$date\" link=\"$day_link\"";
+    if(!empty($this->dayobj->titles)){
+      $eventDayTitle = implode(', ',$this->dayobj->titles);
+      $eventDayTitle = preg_replace('/&#8211;/', '-', $eventDayTitle);
+      $eventDayTitle = preg_replace('/&rsquo;/', '\'', $eventDayTitle);
+      //$eventDayTitle = html_entity_decode( $eventDayTitle );
+      $result.=" titles=\"".$eventDayTitle."\" ";
+      //$result.=" ";
+    }
+      
     if($this->dayobj->has_events())
-      $result.=" is_event='1'";
+      $result.=" is_event=\"1\"";
     if(empty($dayarr))
       $result .= "/>\n";
     else
@@ -110,7 +116,7 @@ class ec3_ec3xml extends ec3_BasicCalendar
     $title=get_the_title();
     if(empty($this->dayobj->titles))
       $this->dayobj->titles = array();
-    $safe_title=strip_tags($title);
+    $safe_title=$title;//strip_tags($title);
     $safe_title=
       str_replace(
         array(',','@'),
@@ -136,7 +142,9 @@ class ec3_ec3xml extends ec3_BasicCalendar
       return;
 
     $link=get_permalink(); 
-    $d = " <detail id='pid_$id' title='$title' link='$link'";
+    $title = preg_replace('/&#8211;/', '-', $title);
+    $title = preg_replace('/&rsquo;/', '\'', $title);
+    $d = " <detail id=\"pid_$id\" title=\"$title\" link=\"$link\" ";
     $excerpt = get_the_excerpt();
     if(empty($excerpt))
       $d .= " />\n";
@@ -145,17 +153,16 @@ class ec3_ec3xml extends ec3_BasicCalendar
     $this->details[$id] = $d;
   }
 }; // end class ec3_ec3xml
-
-
-@header('Content-type: text/xml; charset=' . get_option('blog_charset'));
-echo '<?xml version="1.0" encoding="'.get_option('blog_charset')
-.    '" standalone="yes"?>'."\n";
-
+/*@header('Content-type: text/xml; charset=' . get_option('blog_charset'));
+echo '<?xml version="1.0" encoding="'.get_option('blog_charset').'" standalone="yes"?>'."\n";*/
 // Turn off EC's content filtering.
+
+@header('Content-type: text/xml; charset=UTF-8');
+$xml = '<?xml version="1.0" encoding="'.get_option('blog_charset').'" standalone="yes" ?>';
+
 remove_filter('the_content','ec3_filter_the_content',20);
 remove_filter('get_the_excerpt', 'ec3_get_the_excerpt');
 add_filter('get_the_excerpt', 'wp_trim_excerpt');
-
 global $ec3,$wp_query;
 $options=array();
 if($wp_query->is_month)
@@ -173,10 +180,21 @@ switch(ec3_get_listing_q($wp_query))
     $calobj->add_events($wp_query);
     $calobj->add_posts($wp_query,!$ec3->advanced);
 }
+ob_clean();
+$xml .= '<calendar>';
+$xml .= $calobj->generate();
+$xml .= '<details id="details">';
+$xml .= implode('',$calobj->details);
+$xml .= '</details>';
+$xml .= '</calendar>';
+//$xml = preg_replace("/\\A\\s*/m", "", $xml);
+//$xml = preg_replace("/version/", "teste", $xml);
+//$xml = preg_replace("/(\r\n|\n|\r)/","",$xml);
+echo $xml;
 
-?>
+/*
 <calendar><?php echo $calobj->generate() ?>
 <details id="details">
 <?php echo implode('',$calobj->details) ?>
 </details>
-</calendar>
+</calendar>*/

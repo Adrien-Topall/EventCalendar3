@@ -136,7 +136,7 @@ function ec3_get_start_time($d='')
   elseif($event->allday)
     return __('all day','ec3');
   $d = empty($d)? get_option('time_format'): $d;
-  return mysql2date($d,$event->start);
+  return mysql2date($d,$event->time_start);
 }
 
 /** Get the end time of the current event. */
@@ -146,7 +146,7 @@ function ec3_get_end_time($d='')
   if(empty($event) || $event->allday)
     return '';
   $d = empty($d)? get_option('time_format'): $d;
-  return mysql2date($d,$event->end);
+  return mysql2date($d,$event->time_end);
 
 }
 
@@ -241,7 +241,7 @@ function ec3_iter_all_events_q($query)
   $ec3->events = array();
   $listing = ec3_get_listing_q($query);
 
-  if($query->is_page || $query->is_single || $query->is_admin || $listing=='D'):
+  if($query->is_page || $query->is_single || $query->is_admin || $listing=='D'){
 
       // Emit all events.
       while($query->have_posts())
@@ -252,12 +252,12 @@ function ec3_iter_all_events_q($query)
         foreach($post->ec3_schedule as $s)
           $ec3->events[] = $s;
       }
-
-  elseif($listing=='P'): // posts-only
+  }
+  elseif($listing=='P'){ // posts-only
 
       ; // Leave the $ec3->events array empty - list no events.
-
-  elseif($query->is_date && !$query->is_time):
+  }
+  elseif($query->is_date && !$query->is_time){
 
       // Only emit events that occur on the given day (or month or year).
       // There two alternate ways to specify a date, the 'm' parameter...
@@ -309,8 +309,8 @@ function ec3_iter_all_events_q($query)
           if(mysql2date($fmt,$s->end) >= $m && mysql2date($fmt,$s->start) <= $m)
             $ec3->events[] = $s;
       }
-
-  elseif($ec3->is_date_range):
+  }
+  elseif($ec3->is_date_range){
 
       // The query is date-limited, so only emit events that occur
       // within the date range.
@@ -328,8 +328,8 @@ function ec3_iter_all_events_q($query)
             $ec3->events[] = $s;
           }
       }
-
-  elseif($ec3->advanced &&( $listing=='E' || $query->is_search )):
+  }
+  elseif($ec3->advanced &&( $listing=='E' || $query->is_search )){
 
       // Hide inactive events
       while($query->have_posts())
@@ -341,8 +341,8 @@ function ec3_iter_all_events_q($query)
           if( $s->end >= $ec3->today )
             $ec3->events[] = $s;
       }
-
-  else:
+  }
+  else{
 
       // Emit all events (same as the first branch).
       while($query->have_posts())
@@ -353,8 +353,8 @@ function ec3_iter_all_events_q($query)
         foreach($post->ec3_schedule as $s)
           $ec3->events[] = $s;
       }
-
-  endif;
+  }
+  
   usort($ec3->events,'ec3_cmp_events');
   // This is a bit of a hack - only detect 'order=ASC' query var.
   // Really need our own switch.
@@ -557,6 +557,7 @@ function ec3_get_events(
     echo "<li>".__('No events.','ec3')."</li>\n";
   }
   echo "</ul>\n";
+
 }
 
 
@@ -835,5 +836,309 @@ function ec3_get_active_schedule(
   return sprintf($format_wrapper,$result);
 }
 
+function ec3_display_calendar($start="",$end="",$loc="",$cat="",$query){
 
-?>
+  global $ec3, $wpdb;
+  global $wp_query;
+  
+  $table_lieux = $wpdb->prefix . 'ec3_lieux';
+  setlocale(LC_TIME, "fr_FR");
+
+  if (isset($_GET['cat'])) { $cat_id =  $_GET['cat']; }
+  else{ $cat_id =  get_query_var('cat'); }
+
+  $category = &get_category($cat_id);
+  $cat_title = $category->name ;
+
+  $cat_slug = $category->slug ;
+
+  $cat_ec3 = $ec3->event_category;
+  $select_cat = array();
+  $select_lieux = array();
+
+      
+   if (!isset($_GET['m'])) {
+        $start_date = date("Y-m-d");
+        //$mois_en_cour = date("F Y");
+        $year = date("Y");
+        $month = date("n");
+        $day = date('d');
+        $date = date("Ym");
+        $date_prev = date('Ym',strtotime('-1 month',strtotime($year."-".$month."-".$day)));
+        $date_next = date('Ym',strtotime('+1 month',strtotime($year."-".$month."-".$day)));
+        $date_en_cour = utf8_encode(strftime("%B %G",strtotime("F Y")));
+        $next_month = utf8_encode(strftime("%B",strtotime('+1 month', mktime(0,0,0,$month,$day,$year) )))."&nbsp>>";
+        $prev_month = "<<&nbsp;". utf8_encode(strftime("%B",strtotime('-1 month', mktime(0,0,0,$month,$day,$year) )));
+      }
+    else{
+        $year = substr($_GET['m'], 0, 4);
+        $month = substr($_GET['m'], 4, 2);
+        $day = date('d');
+      if(strlen($_GET['m'])>=8)
+        {
+          $day = substr($_GET['m'], 6, 2);
+          $date = date("Ymd", strtotime($year."-".$month."-".$day));
+          $date_prev = date('Ymd',strtotime('-1 days',strtotime($year."-".$month."-".$day)));
+          $date_next = date('Ymd',strtotime('+1 days',strtotime($year."-".$month."-".$day)));
+          $date_en_cour = utf8_encode(strftime("%A %d %B %G",strtotime($year."-".$month."-".$day)));
+          $next_month = utf8_encode(strftime("%A %d",strtotime('+1 days', mktime(0,0,0,$month,$day,$year) )))."&nbsp>>";
+          $prev_month = "<<&nbsp;". utf8_encode(strftime("%A %d",strtotime('-1 days', mktime(0,0,0,$month,$day,$year) )));
+        }
+      elseif(strlen($_GET['m'])==6)
+        {
+          $date = date("Ym", strtotime($year."-".$month."-".$day));
+          $date_prev = date('Ym',strtotime('-1 month',strtotime($year."-".$month."-".$day)));
+          $date_next = date('Ym',strtotime('+1 month',strtotime($year."-".$month."-".$day)));
+          $date_en_cour = utf8_encode(strftime("%B %G",strtotime($year."-".$month."-".$day)));
+          $next_month = utf8_encode(strftime("%B",strtotime('+1 month', mktime(0,0,0,$month,$day,$year) )))."&nbsp>>";
+          $prev_month = "<<&nbsp;". utf8_encode(strftime("%B",strtotime('-1 month', mktime(0,0,0,$month,$day,$year) )));
+        }
+    }
+
+    $url = get_site_url() .'?m='. $date .'&amp;ec3_listing=events&amp;cat='.$cat_id.'&amp;select_lieux='.$_GET['select_lieux'];
+    $url_prev = get_site_url() .'?m='. $date_prev .'&amp;ec3_listing=events&amp;cat='.$cat_id.'&amp;select_lieux='.$_GET['select_lieux'];
+    $url_next = get_site_url() .'?m='. $date_next .'&amp;ec3_listing=events&amp;cat='.$cat_id.'&amp;select_lieux='.$_GET['select_lieux'];
+
+
+
+// Recuperation de toute les catégorie et id_lieux presente dans le mois.
+
+    
+$args_liste_cat = array(
+          'cat' => $cat_ec3,
+          'posts_per_page' => 100,
+          'posts_per_archive_page' => 100,
+          'm' => $_GET['m'],
+          'ec3_listing' => $_GET['ec3_listing'],
+          'ec3_after' => $start_date
+             );
+$query_cat = new WP_Query( $args_liste_cat );
+  if($query_cat->have_posts()) {
+    ?>
+    <?php echo $query_cat->post_count." posts trouvé."; ?>
+      <?php  foreach ($query_cat->posts as $value) { ?>
+          <?php foreach ($value->ec3_schedule as $lieux) {
+            
+            if (!in_array($lieux->lieux_id, $select_lieux) && $lieux->lieux_id != "") {
+              array_push($select_lieux, $lieux->lieux_id);
+            }
+           
+          } ?>
+       <?php } ?>
+
+    <?php while ( have_posts() ) : the_post(); ?>
+        <?php $categories = get_the_category( $post->ID ); ?>
+        <?php foreach ($categories as $value) {
+          if ($value->parent == $cat_ec3 ) {
+            if (!in_array($value->slug.",".$value->cat_ID, $select_cat)) {
+              array_push($select_cat, $value->slug.",".$value->cat_ID);
+            }
+          }
+        } ?> 
+    <?php endwhile; ?>
+    <?php
+  }
+  wp_reset_query();
+
+  $ids = join(',',$select_lieux);  
+  $liste_lieux = $wpdb->get_results("SELECT * FROM $table_lieux WHERE lieux_id IN ($ids)");
+
+        ?>
+    <STYLE type="text/css">
+      .row{
+        line-height: 2em;
+        background-color: #aaa;
+        width: 100%;
+        text-align: center;
+      }
+      .prev{
+        padding: 0 2em;
+      }
+      .now{
+        display: inline-block;
+        width: 50%;
+        text-align: center;
+      }
+    </STYLE>
+    <?php $nav_bar = '<div class="row">'
+        .'<span class="prev"><a href="'. $url_prev .'">'. $prev_month .'</a></span>'
+        .'<span class="now"><a href="'. $url .'">'. $date_en_cour .'</a></span>'
+        .'<span class="prev"><a href="'. $url_next .'">'. $next_month .'</a></span>'
+        .'</div>'; ?>
+    <div class="entry-content">
+      <?php // Menu de navigation ?>
+      <?php echo $nav_bar; ?>
+
+      <?php // Select pour choisir une categorie dans le mois en cours. ?>
+      <form action="<?php echo get_site_url(); ?>">
+        <input type="hidden" name="m" value="<?php echo $date; ?>">
+        <input type="hidden" name="ec3_listing" value="events">
+        <select name="cat" id="select_cat"><?php
+          if (empty($cat_slug)) {
+            ?><option value="" selected="selected" >Choisir une catégorie</option> <?php
+          }
+          else{ ?><option value="" >Choisir une catégorie</option> <?php }
+          foreach ($select_cat as $val_cat) {
+            $value = explode(",", $val_cat);
+            ?> 
+              <option value="<?php echo $value['1']; ?>" 
+                  <?php if ($value['0'] == $cat_slug) {
+                    ?>selected="selected"<?php
+                  } ?>
+                >
+                <?php echo $value['0']; ?>
+              </option>
+            <?php
+          }
+          ?></select>
+          <?php // Select pour choisir une categorie dans le mois en cours. 
+            if (isset($_GET['select_lieux'])) { $choix_lieux = $_GET['select_lieux']; }
+            else { $choix_lieux = ""; }
+          ?>
+          <select name="select_lieux" id="select_lieux"><?php
+          if (empty($choix_lieux)) {
+            ?><option value="" selected="selected" >Choisir un lieu</option> <?php
+          }
+          else{ ?><option value="" >Choisir un lieu</option> <?php }
+
+          foreach ($liste_lieux as $val_lieu) {
+            ?> 
+              <option value="<?php echo $val_lieu->lieux_id; ?>" 
+                  <?php if ($choix_lieux == $val_lieu->lieux_id) {
+                    ?>selected="selected"<?php
+                  } ?>
+                >
+                <?php echo $val_lieu->nom_lieux; ?>
+              </option>
+            <?php
+          }
+          ?></select>
+          <input type="submit" value="OK">
+        </form>
+    
+    <?php
+
+    // Recuperation des infos et affichage des posts.
+    
+    $args = array(
+              'cat' => $cat_id,
+              'posts_per_page' => 100,
+              'm' => $_GET['m'],
+              'ec3_listing' => $_GET['ec3_listing'],
+              'ec3_after' => $start_date,
+              'ec3_id_lieux' => $_GET['select_lieux']
+              //'ec3_before' => $end_date
+              );
+
+    $query = new WP_Query( $args );
+      if($query->have_posts()) {
+        
+        ?>
+        <?php while ( have_posts() ) : the_post(); ?>
+            <?php foreach ($query->posts as $schedule) {
+
+              } ?>
+              <?php $examplePost = get_post(); 
+                foreach ($examplePost->ec3_schedule as $schedule) {
+                  if ($schedule->lieux_id == $_GET['select_lieux'] || $_GET['select_lieux']=="") {
+                      
+                      ?><h5><a href="<?php echo get_permalink(); ?>"><?php echo get_the_title(); ?></a></h5><?php
+                      
+                      break;
+                   } 
+                }
+              ?>      
+
+        <?php endwhile; ?>
+        <?php
+        }
+      else{
+          $message_no_post = "<h3>Il n'y à pas de post pour les critères sélectionnés</h3>";
+        }
+      wp_reset_query(); ?>
+
+      <?php echo $nav_bar; ?>
+    </div> <?php
+}
+
+// Retourne la liste des lieux du mois en cours
+function ec3_get_lieux_active_schedule(){
+
+  global $ec3, $wpdb;
+  require_once(dirname(__FILE__).'/calendar-sidebar.php');
+  $month_callendar = new ec3_SidebarCalendar($options);
+
+  $table_schedule = $wpdb->prefix . 'ec3_schedule';
+  $table_lieux = $wpdb->prefix . 'ec3_lieux';
+  $table_opt = $wpdb->prefix . 'ec3_add_opt';
+
+  setlocale(LC_TIME, "fr_FR");
+  
+  $year  = $month_callendar->begin_dateobj->year_num;
+  $month = $month_callendar->begin_dateobj->month_num;
+  $month_num = zeroise($month, 2);
+  $prev = $month_callendar->begin_dateobj->prev_month();
+  $next = $month_callendar->begin_dateobj->next_month();
+  $prev_num = zeroise($prev->month_num, 2);
+  $next_num = zeroise($next->month_num, 2);
+
+  $month = utf8_encode(strftime("%B",strtotime($year."-".$month."-01")));
+  $prev_month = utf8_encode(strftime("%B",strtotime($year."-".$prev_num."-01")));
+  $next_month = utf8_encode(strftime("%B",strtotime($year."-".$next_num."-01")));
+
+  $date_select = $year."-".$month;
+
+
+
+  // Menu de recherche par mois
+  $agenda_nav = '<div class="block_nav_agenda">'
+            . '<div class="two columns alpha">'
+            . '<a class="button" href="'. get_site_url() .'?m='. $year.$prev_num .'&amp;ec3_listing=events" ><< '. $prev_month .'</a>'
+            . '</div>'
+            . '<div class="seven columns agenda-nav">'
+            . '<a href="'. get_site_url() .'?m='. $year.$month_num .'&amp;ec3_listing=events">'. $month." ".$year .'</a>'
+            . '</div>'
+            . '<div class="two columns omega">'
+            . '<a class="button" href="'. get_site_url() .'?m='. $year.$next_num .'&amp;ec3_listing=events">'. $next_month .' >></a>'
+            . '</div>'
+            . '</div>';
+
+  echo  $agenda_nav;
+  
+  $lieu_default = $wpdb->get_results("SELECT DISTINCT lieux_id FROM $table_schedule WHERE MONTH(start) = $month_num OR MONTH(end) = $month_num ;");
+  $ids_lieux = array();
+  foreach ($lieu_default as $key) {
+    if (!empty($key->lieux_id)) {
+      array_push($ids_lieux, $key->lieux_id);
+    }
+    
+  }
+  $ids = join(',',$ids_lieux);  
+  $tous_les_lieux = $wpdb->get_results("SELECT * FROM $table_lieux WHERE lieux_id IN ($ids)");
+
+  if (isset($_GET['lieux']) ) {
+    $lieu_choisi = $_GET['lieux'];
+  }
+
+  ?><select name="ec3_lieux_<?php echo $id_date; ?>" id="ec3_lieux_<?php echo $id_date; ?>"><?php
+    if (!isset($_GET['lieux']) ) {
+      ?><option value="" selected="selected" >Choisir un lieux</option> <?php
+    }
+    foreach ($tous_les_lieux as $key_lieu) {
+      ?> 
+
+      <option value="<?php echo $key_lieu->lieux_id; ?>" 
+            <?php if ($lieu_choisi == $key_lieu->lieux_id) {
+              ?>selected="selected"<?php
+            } ?>
+          >
+          <?php echo $key_lieu->nom_lieux; ?>
+        </option>
+      <?php
+    }
+  ?></select>
+  <input type="button" value="OK" id="lieux_choisit"> <?php
+
+  echo  $agenda_nav;
+
+}

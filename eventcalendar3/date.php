@@ -305,5 +305,3 @@ function ec3_dayid2php(&$id)
   $day  =(count($parts)>=4? intval($parts[3]): 1);
   return mktime( 0,0,0, $month,$day,$year);
 }
-
-?>

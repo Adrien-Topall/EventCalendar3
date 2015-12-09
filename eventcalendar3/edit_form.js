@@ -18,7 +18,7 @@ function WindowOnload(f)
 // namespace
 function Ec3EditForm()
 {
-  var fmt="%Y-%m-%d %H:%M";
+  var fmt="%Y-%m-%d";// %H:%M";
 
   WindowOnload( function()
   {
@@ -62,7 +62,7 @@ function Ec3EditForm()
         cal=Calendar.setup({
           inputField:input,
           ifFormat:fmt,
-          showsTime:true,
+          showsTime:false,
           button:buttons[i].id,
           step:1,
           firstDay:Ec3EditForm.start_of_week,
@@ -101,10 +101,10 @@ function Ec3EditForm()
 	d.setFullYear(dt.substr(0, 4));
 	d.setMonth(dt.substr(5, 2)-1);
 	d.setDate(dt.substr(8, 2));
-	d.setHours(dt.substr(11, 2));
-	d.setMinutes(dt.substr(14, 2));
-	d.setSeconds(0);
-	d.setMilliseconds(0);
+	//d.setHours(dt.substr(11, 2));
+	//d.setMinutes(dt.substr(14, 2));
+	//d.setSeconds(0);
+	//d.setMilliseconds(0);
 	return d;
   }
 
@@ -252,7 +252,7 @@ function Ec3EditForm()
 							break;
 						}
 					}
-					inputs[i].value = d.getFullYear() + '-' + ((d.getMonth()+1) < 10 ? '0' : '') + (d.getMonth()+1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+					inputs[i].value = d.getFullYear() + '-' + ((d.getMonth()+1) < 10 ? '0' : '') + (d.getMonth()+1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();// + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
 				}
 				if (inputs[i].name.indexOf('ec3_end') == 0)
 				{
@@ -295,7 +295,7 @@ function Ec3EditForm()
 						if (daydiff < 0) daydiff += 7;
 						d.setDate(7 * (daycount - 1) + daydiff + 1);
 					}
-					inputs[i].value = d.getFullYear() + '-' + ((d.getMonth()+1) < 10 ? '0' : '') + (d.getMonth()+1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate() + ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
+					inputs[i].value = d.getFullYear() + '-' + ((d.getMonth()+1) < 10 ? '0' : '') + (d.getMonth()+1) + '-' + (d.getDate() < 10 ? '0' : '') + d.getDate();//+ ' ' + (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
 				}
 			} // input (i) loop
 				

@@ -112,5 +112,3 @@ class ec3_BigCalendar extends ec3_SidebarCalendar
   }
 
 };
-
-?>

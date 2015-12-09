@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: Event Calendar
-Version: 3.2.beta3
+Plugin Name: Event Calendar Plus
+Version: 3.2.beta4
 Plugin URI: http://wpcal.firetree.net
 Description: Manage future events as an online calendar. Display upcoming events in a dynamic calendar, on a listings page, or as a list in the sidebar. You can subscribe to the calendar from iCal (OSX) or Sunbird. Change settings on the <a href="options-general.php?page=ec3_admin">Event Calendar Options</a> screen.
-Author: Alex Tingle
+Author: Alex Tingle, modifié par Adrien Topall
 Author URI: http://blog.firetree.net/
 */
 
@@ -26,15 +26,152 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+function create_plugin_database_table() {
+  global $wpdb;
+  
+  $table_schedule = $wpdb->prefix . 'ec3_schedule';
+  $table_lieux = $wpdb->prefix . 'ec3_lieux';
+  $table_opt = $wpdb->prefix . 'ec3_add_opt';
+  $table_geo = $wpdb->prefix . 'geopress';
+  $table_teste = $wpdb->prefix . 'ec3_teste';
+  $table_meta = $wpdb->prefix . 'postmeta';
+  $table_oa_event = $wpdb->prefix . 'ec3_oa_event';
+  $table_oa_agenda = $wpdb->prefix . 'ec3_oa_agenda';
+
+
+  $table_exists=false;
+  $table_geo_exists=false;
+
+  $tables=$wpdb->get_results('SHOW TABLES',ARRAY_N);
+
+  foreach ($tables as $t) {
+    if (preg_match("/$table_schedule/",$t[0])) {
+      $table_exists=true;
+    }
+    if (preg_match("/$table_geo/",$t[0])) {
+      $table_geo_exists=true;
+    }
+  }
+    
+    $sql1 = "CREATE TABLE $table_lieux (
+             lieux_id     INT(10) AUTO_INCREMENT,
+             departement  VARCHAR(3),
+             nom_ville    VARCHAR(85),
+             nom_lieux    VARCHAR(255),
+             adresse      VARCHAR(255),
+             longitude    FLOAT(18,14),
+             latitude     FLOAT(18,14),
+             lieux_uid    BIGINT(20),
+             PRIMARY KEY(lieux_id)
+           )";
+
+    $sql2 = "CREATE TABLE $table_opt (
+           option_id    INT(10) AUTO_INCREMENT,
+           nom          VARCHAR(85),
+           message      VARCHAR(255),
+           PRIMARY KEY(option_id)
+         )";
+
+    $sql5 = "CREATE TABLE $table_oa_agenda (
+           agenda_uid   BIGINT(20),
+           title        VARCHAR(255),
+           slugName     VARCHAR(255),
+           PRIMARY KEY(agenda_uid)
+         )";
+
+    if ($table_exists) {
+      $wpdb->query("ALTER TABLE $table_schedule ADD time_start TIME NOT NULL DEFAULT '00:00:00' AFTER `end`;");
+      $wpdb->query("ALTER TABLE $table_schedule ADD time_end TIME NOT NULL DEFAULT '00:00:00' AFTER `time_start`;");
+      $wpdb->query("ALTER TABLE $table_schedule ADD lieux_id INT(10) ");
+      $wpdb->query("ALTER TABLE $table_schedule ADD option_id INT(10) ");
+      $wpdb->query("ALTER TABLE $table_schedule ADD sync tinyint(1) DEFAULT 0 ");
+      $wpdb->query("ALTER TABLE $table_schedule ADD event_uid BIGINT(20) DEFAULT 0 ");
+    }
+    else{
+      $sql3 = "CREATE TABLE $table_schedule (
+             sched_id     BIGINT(20) AUTO_INCREMENT,
+             post_id      BIGINT(20),
+             start        DATETIME,
+             end          DATETIME,
+             time_start   TIME NOT NULL DEFAULT '00:00:00',
+             time_end     TIME NOT NULL DEFAULT '00:00:00',
+             allday       BOOL,
+             rpt          VARCHAR(64),
+             sequence     BIGINT(20),
+             lieux_id     INT(10),
+             option_id    INT(10),
+             sync         tinyint(1) DEFAULT 0,
+             event_uid    BIGINT(20) DEFAULT 0,
+             PRIMARY KEY(sched_id),
+             FOREIGN KEY (lieux_id) REFERENCES $table_lieux(lieux_id),
+             FOREIGN KEY (option_id) REFERENCES $table_opt(option_id)
+           )";
+    }
+
+    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+    dbDelta( $sql1 );
+    dbDelta( $sql2 );
+    dbDelta( $sql3 );
+    dbDelta( $sql4 );
+    dbDelta( $sql5 );
+
+    // Remise à zero des options.
+    $wpdb->query('DELETE FROM '.$table_opt.'');
+    $wpdb->insert( $table_opt, array('option_id' => 1, 'nom' => 'RAS', 'message' => 'Rien à signaler' ), array( '%s', '%s' ) );
+
+    // Update de la time zone.
+    $time_zone = $wpdb->get_row('SELECT * FROM '.$wpdb->prefix.'options WHERE option_name = "ec3_tz" LIMITE 1');
+    if ( null == $event_uid ) { 
+       update_option('ec3_tz', 'Europe/Paris');
+    } 
+
+    if ($table_geo_exists) {
+      $toutes_les_geo = $wpdb->get_results("SELECT geopress_id, name, loc, coord FROM $table_geo");
+
+      foreach ($toutes_les_geo as $lieu) {
+        
+        $lieux = $lieu->geopress_id;
+
+        preg_match('/\((((?>[^()]+)|(?R))*)\)/U', $lieu->name, $matches);
+        $departement = $matches[1];
+
+        $nom_ville = substr($lieu->name, 0, strpos($lieu->name, "(")-1);
+        $nom_lieux = substr($lieu->name, strpos($lieu->name, "|")+1);
+        $adresse = $lieu->loc;
+        $log_lat = explode(" ", $lieu->coord);
+        $longitude = $log_lat['0'];
+        $latitude = $log_lat['1'];
+
+        $wpdb->insert( $table_lieux, array( 'lieux_id' => $lieux, 'departement' => $departement, 'nom_ville' => $nom_ville, 'nom_lieux' => $nom_lieux, 'adresse' => $adresse, 'longitude' => $longitude, 'latitude' => $latitude) );
+        
+      }
+
+      $lien_post_lieu = $wpdb->get_results("SELECT post_id, meta_value FROM $wpdb->postmeta WHERE meta_key = '_geopress_id' ");
+
+      foreach ($lien_post_lieu as $value) {
+        $lieux = $value->meta_value;
+        $post_id = $value->post_id;
+        $wpdb->update( $table_schedule, array( 'lieux_id' => $lieux), array( 'post_id' => $post_id ) );
+      }
+    }
+
+}
+ 
+register_activation_hook( __FILE__, 'create_plugin_database_table' );
+
+
 require_once(dirname(__FILE__).'/options.php');
 require_once(dirname(__FILE__).'/date.php');
 require_once(dirname(__FILE__).'/template-functions.php');
 require_once(dirname(__FILE__).'/template-functions-new.php');
+require_once(dirname(__FILE__).'/api-openAgenda.php');
 require_once(dirname(__FILE__).'/admin.php');
 require_once(dirname(__FILE__).'/tz.php');
 require_once(dirname(__FILE__).'/widget-calendar.php');
 require_once(dirname(__FILE__).'/widget-list.php');
-
+require_once(dirname(__FILE__).'/lieux.php');
+//require_once(dirname(__FILE__).'/api-openAgenda.php');
+//require_once(dirname(__FILE__).'/api-sync.php');
 
 $ec3_today_id=str_replace('_0','_',ec3_strftime("ec3_%Y_%m_%d"));
 
@@ -381,6 +518,7 @@ function ec3_filter_query_vars($wpvarstoreset)
   $wpvarstoreset[]='ec3_after';
   $wpvarstoreset[]='ec3_before';
   $wpvarstoreset[]='ec3_listing';
+  $wpvarstoreset[]='ec3_id_lieux';
   // Turn-off broken canonical redirection when both m= & cat= are set.
   if(isset($_GET['m']) && isset($_GET['cat']))
     remove_action('template_redirect','redirect_canonical');
@@ -631,5 +769,443 @@ if($ec3->event_category)
     add_filter('getarchives_where','ec3_filter_getarchives_where');
   }
 }
+/*************************************************************************
+* Création d'une page de gestion des lieux
+*************************************************************************/
 
-?>
+
+add_action('admin_menu', 'cree_page_lieux');
+
+function cree_page_lieux(){
+  add_menu_page(
+    'Lieux',                    //$page_title
+    'Lieux',                    //$menu_title
+    'edit_others_posts',        //$capability
+    'lieux',                    //$menu_slug
+    'cree_page_lieux_content',  //$function
+    'dashicons-location',
+    '12'
+  );
+}
+
+/************************************************************************
+// Création du type de post 'event'
+*************************************************************************/
+/*
+function creation_type_ec3(){
+  $labels = array(
+    'name'               => 'event',
+    'singular_name'      => 'event',
+    'menu_name'          => 'event',
+    'name_admin_bar'     => 'event',
+    'add_new'            => 'Ajouter',
+    'add_new_item'       => 'Ajouter un event',
+    'new_item'           => 'Nouvelle event',
+    'edit_item'          => 'Modifier l\' event',
+    'view_item'          => 'Voir l\'event',
+    'all_items'          => 'Tout les events',
+    'search_items'       => 'Rechercher un event',
+    // 'parent_item_colon'  => __( 'Parent Books:', 'your-plugin-textdomain' ),
+    'not_found'          => 'Aucun event trouvé',
+    'not_found_in_trash' => 'Aucun event dans la corbeille'
+  );
+
+  $args = array(
+    'labels'             => $labels,
+    'public'             => true,
+    'publicly_queryable' => true,
+    'show_ui'            => true,
+    'show_in_menu'       => true,
+    'query_var'          => true,
+    'rewrite'            => array( 'slug' => 'page-event' ),
+    'capability_type'    => 'post',
+    'has_archive'        => false, // Si true, la liste des autos est visible sur {url_du_site}/accueil
+    'hierarchical'       => false,
+    'menu_position'      => 6,
+    'menu_icon'        => 'dashicons-calendar-alt',
+    'supports'           => array( 'title', 'editor', 'thumbnail' ),
+    'taxonomies'         => array('category','post_tag') 
+  );
+
+  register_post_type('event',$args);
+}
+add_action('init','creation_type_ec3');*/
+
+/************************************************************************
+// Requetes ajax
+*************************************************************************/
+
+add_action( 'admin_footer', 'my_action_javascript' ); // Write our JS below here
+
+function my_action_javascript() { ?>
+  <script type="text/javascript" >
+  jQuery(document).ready(function($) {
+
+    var data = {
+      'action': 'my_action'
+    };
+
+    $('#syncNow').click(function(event){
+      event.preventDefault();
+      jQuery.post(ajaxurl, data, function(response) {
+        if (response == 'succes') { 
+          $('#reponseA').html('Synchronisation réussit');
+         }
+         else{
+          $('#reponseA').html('Pas d\'évenement à Synchroniser ou erreur lors de la synchronisation.');
+         }
+        console.log(response);
+      });       
+    });
+
+    $('.toggle').click(function(e){
+      e.preventDefault(); // The flicker is a codepen thing
+      var id_post = $(this).attr('title');
+      if ( $(this).hasClass("toggle-on") ) {
+        var sync = 'already';
+      }
+      else{
+        var sync = 'no';
+      }
+      var data01 = {
+        'action': 'sync_post',
+        'id_post': id_post,
+        'sync': sync
+      };
+      jQuery.post(ajaxurl, data01, function(response) {
+        if (response == 'deSync') { 
+          $('.column-sync div[title="'+id_post+'"]').removeClass('toggle-on');
+         }
+         else if ( response == 'syncOk' ){
+          $('.column-sync div[title="'+id_post+'"]').addClass('toggle-on');
+         }
+        console.log(response);
+      });   
+    });
+
+  });
+  </script> <?php
+}
+
+add_action( 'wp_ajax_my_action', 'my_action_callback' );
+add_action( 'wp_ajax_sync_post', 'sync_post_callback' );
+
+function my_action_callback() {
+  global $wpdb, $apikey, $secretKey, $ec3, $slugNameAgenda; 
+  $table_schedule = $wpdb->prefix . 'ec3_schedule';
+  $table_oa_event = $wpdb->prefix . 'ec3_oa_event';
+  $table_lieux = $wpdb->prefix . 'ec3_lieux';
+  $table_post = $wpdb->prefix . 'posts';
+
+
+
+  $date = date("Y-m-d");
+  // Recupere les posts à sync   
+  $tous_les_posts = $wpdb->get_results('SELECT DISTINCT post_id FROM '.$table_schedule.' WHERE `end` >= "'.$date.'" AND `sync` = 0 ORDER BY '.$table_schedule.'.start ASC ');
+
+  //print_r($tous_les_posts);
+
+  if ( $tous_les_posts ) {
+
+    $accessToken = oa_connect($secretKey);
+    //echo "wrong way";
+    foreach ($tous_les_posts as $key => $value) {
+      
+      // récuperation des info du post
+      $infoPost = $wpdb->get_row('SELECT post_title, post_content FROM '.$table_post.' WHERE ID = '.$value->post_id.' LIMIT 1 ');
+      $imageUrl = wp_get_attachment_url( get_post_thumbnail_id($value->post_id) );
+
+      if ( $imageUrl == false || empty($imageUrl) ) {
+        $imageUrl = '';
+      }else{
+        $temp1 = '@' . dirname(__FILE__);
+        $temp1 = preg_replace('@(wp-content/)([a-zA-Z0-9-]+[/]?)*@', 'wp-content/', $temp1);
+        $imageUrl = preg_replace('@((http|https)://(w{3}\.)?)([a-zA-Z0-9.-]*[/])*([a-zA-Z0-9-]*[/])*(uploads/)@', 'uploads/', $imageUrl);     
+        $imageUrl = $temp1.$imageUrl;
+      }
+
+        //echo $value->post_id;
+        // récuperation des lieux du post
+        $tous_les_lieux = $wpdb->get_results('SELECT DISTINCT lieux_id FROM '.$table_schedule.' WHERE post_id = '.$value->post_id.' AND `sync` = 0 ');
+        
+        foreach ($tous_les_lieux as $key => $val_lieu) {
+          // on verifie que le lieux est deja créé dans open agenda
+          $loc_uid = $wpdb->get_row('SELECT lieux_uid FROM '.$table_lieux.' WHERE lieux_id = '.$val_lieu->lieux_id.' LIMIT 1 ');
+
+          if ( empty($loc_uid->lieux_uid) ) { 
+            // on crée le lieux dans open aganda
+            $loc_uid->lieux_uid = oa_createLocation($accessToken, $val_lieu->lieux_id);
+          } 
+
+
+          // récuperation des events du post
+          $tous_les_events = $wpdb->get_results('SELECT sched_id, start, end, time_start, time_end, event_uid FROM '.$table_schedule.' WHERE post_id = '.$value->post_id.' AND lieux_id = '.$val_lieu->lieux_id.' ');
+          $date = array();
+          $listeSchedIds = '';
+          $eventUid = 0;
+          foreach ($tous_les_events as $key => $val_date) { // création d'un tableau 2D avec toutes les dates du post.
+            $start =  new DateTime( substr($val_date->start, 0, 10) );
+            $end =  new DateTime( substr($val_date->end, 0, 10) );
+            $tStrat = substr($val_date->time_start, 0, 5);
+            $tEnd = substr($val_date->time_end, 0, 5);
+
+            while ($start <= $end) {
+              $day = array( $start->format('Y-m-d'), $tStrat, $tEnd );
+              array_push($date, $day);
+              $start->modify('+1 day');
+            }
+            if ($listeSchedIds == '') {
+              $listeSchedIds = $val_date->sched_id;
+            }
+            else{
+              $listeSchedIds = $listeSchedIds.','.$val_date->sched_id;
+            }
+            // on verifie si l'event existe deja
+            if ($val_date->event_uid != 0 && $eventUid != 0 ) {
+              $eventUid = $val_date->event_uid;
+            }
+            
+          }
+          // On prepare les données pour crée l'event
+          $title = substr($infoPost->post_title, 0, 138);
+          $description = substr($infoPost->post_content, 0, 50);
+          $freeText = substr($infoPost->post_content, 0, 5800);
+
+          
+          if ($eventUid != 0) {
+            // on modifie l'event
+            $eventUid = oa_editEvent($event_Uid, $accessToken, $title, $date, $location_uid, '' );
+          }
+          else{
+            // On crée l'event et récupère son Uid
+            $eventUid = oa_createEvent( $accessToken, $title, $description, $freeText, '', $loc_uid->lieux_uid, $date, $imageUrl ); 
+          }
+
+          
+          // on récupère l'Uid de l'agenda
+          // TODO : stocker cette info dans db_option
+          $agendaUid = oa_getUidAgenda($apikey, $slugNameAgenda);
+
+          $retourPush = oa_pushEventAgenda( $agendaUid, $eventUid, $description, $accessToken );
+          if ($retourPush != 'false' && $retourPush == 'ok') {
+            // On passe dans la db schedule sync=1
+            $wpdb->query('UPDATE '.$table_schedule.' SET sync = 1, event_uid = '.$eventUid.'  WHERE sched_id IN ('.$listeSchedIds.') ');
+            
+          }
+          else{
+            echo "false";
+          }
+        }   
+
+      // Verifie si tout les events du post sont synchronisé
+      $listeSyncEvent = $wpdb->get_results('SELECT sync FROM '.$ec3->schedule.' WHERE post_id = '.$value->post_id.';');
+      $syncOrNot = 1;
+      foreach ($listeSyncEvent as $key => $valSync) {
+        if ($valSync->sync != 1){
+          $syncOrNot = 0;
+        }
+      }
+      update_post_meta( $value->post_id, 'syncOrNot', $syncOrNot );
+    }
+    echo "succes";
+    wp_die();
+  }
+  else{
+    echo "false";
+    wp_die();
+  }
+
+}
+/************************************************************
+* Synchronisation et Désynchronation des events d'un post
+*************************************************************/
+
+function sync_post_callback() {
+  global $wpdb, $apikey, $secretKey, $ec3, $slugNameAgenda; 
+  $table_schedule = $wpdb->prefix . 'ec3_schedule';
+  $table_oa_event = $wpdb->prefix . 'ec3_oa_event';
+  $table_lieux = $wpdb->prefix . 'ec3_lieux';
+  $table_post = $wpdb->prefix . 'posts';
+
+
+
+  $date = date("Y-m-d");
+  
+  $id_post = $_POST['id_post'];
+  $sync = $_POST['sync'];
+
+
+  $accessToken = oa_connect($secretKey);
+
+    if ( $sync == 'already' ) {
+      // On désynchronise les events du post
+      $listeEvent = $wpdb->get_results('SELECT DISTINCT event_uid FROM '.$table_schedule.' WHERE post_id = '.$id_post.' AND event_uid IS NOT NULL ');
+    
+      foreach ($listeEvent as $key => $val_event) {
+        $delEvent = oa_delEvent($val_event->event_uid, $accessToken);
+        if ( $delEvent == 'successfull') {
+          $wpdb->query('UPDATE '.$table_schedule.' SET sync = 0, event_uid = 0 WHERE post_id = '.$id_post.' AND event_uid = '.$val_event->event_uid.' ');
+        }
+      }
+      
+      update_post_meta( $id_post, 'syncOrNot', '0' );
+      echo 'deSync';
+      wp_die();
+    }
+    else{
+      // On synchronise les events du post
+
+      // récuperation des info du post
+      $infoPost = $wpdb->get_row('SELECT post_title, post_content FROM '.$table_post.' WHERE ID = '.$id_post.' LIMIT 1 ');
+      $imageUrl = wp_get_attachment_url( get_post_thumbnail_id($id_post) );
+
+      if ( $imageUrl == false || empty($imageUrl) ) {
+        $imageUrl = '';
+      }else{
+        $temp1 = '@' . dirname(__FILE__);
+        $temp1 = preg_replace('@(wp-content/)([a-zA-Z0-9-]+[/]?)*@', 'wp-content/', $temp1);
+        $imageUrl = preg_replace('@((http|https)://(w{3}\.)?)([a-zA-Z0-9.-]*[/])*([a-zA-Z0-9-]*[/])*(uploads/)@', 'uploads/', $imageUrl);     
+        $imageUrl = $temp1.$imageUrl;
+      }
+
+        //echo $value->post_id;
+        // récuperation des lieux du post
+        $tous_les_lieux = $wpdb->get_results('SELECT DISTINCT lieux_id FROM '.$table_schedule.' WHERE post_id = '.$id_post.' AND `sync` = 0 ');
+        
+        foreach ($tous_les_lieux as $key => $val_lieu) {
+          // on verifie que le lieux est deja créé dans open agenda
+          $loc_uid = $wpdb->get_row('SELECT lieux_uid FROM '.$table_lieux.' WHERE lieux_id = '.$val_lieu->lieux_id.' LIMIT 1 ');
+
+          if ( empty($loc_uid->lieux_uid) ) { 
+            // on crée le lieux dans open aganda
+            $loc_uid->lieux_uid = oa_createLocation($accessToken, $val_lieu->lieux_id);
+          } 
+
+
+          // récuperation des events du post
+          $tous_les_events = $wpdb->get_results('SELECT sched_id, start, end, time_start, time_end, event_uid FROM '.$table_schedule.' WHERE post_id = '.$id_post.' AND lieux_id = '.$val_lieu->lieux_id.' ');
+          $date = array();
+          $listeSchedIds = '';
+          $eventUid = 0;
+          foreach ($tous_les_events as $key => $val_date) { // création d'un tableau 2D avec toutes les dates du post.
+            $start =  new DateTime( substr($val_date->start, 0, 10) );
+            $end =  new DateTime( substr($val_date->end, 0, 10) );
+            $tStrat = substr($val_date->time_start, 0, 5);
+            $tEnd = substr($val_date->time_end, 0, 5);
+
+            while ($start <= $end) {
+              $day = array( $start->format('Y-m-d'), $tStrat, $tEnd );
+              array_push($date, $day);
+              $start->modify('+1 day');
+            }
+            if ($listeSchedIds == '') {
+              $listeSchedIds = $val_date->sched_id;
+            }
+            else{
+              $listeSchedIds = $listeSchedIds.','.$val_date->sched_id;
+            }
+            // on verifie si l'event existe deja
+            if ($val_date->event_uid != 0 && $eventUid == 0 ) {
+              $eventUid = $val_date->event_uid;
+            }
+            
+          }
+          // On prepare les données pour crée l'event
+          $title = substr($infoPost->post_title, 0, 138);
+          $description = substr($infoPost->post_content, 0, 50);
+          $freeText = substr($infoPost->post_content, 0, 5800);
+
+          
+          if ($eventUid != 0) {
+            // on modifie l'event
+            $eventUid = oa_editEvent($eventUid, $accessToken, $title, $date, $loc_uid->lieux_uid, '' );
+            if ($eventUid == 'false') {
+              echo "false modif event";
+              wp_die();
+            }
+          }
+          else{
+            // On crée l'event et récupère son Uid
+            $eventUid = oa_createEvent( $accessToken, $title, $description, $freeText, '', $loc_uid->lieux_uid, $date, $imageUrl ); 
+          }
+
+
+          
+          // on récupère l'Uid de l'agenda
+          // TODO : stocker cette info dans db_option
+          $agendaUid = oa_getUidAgenda($apikey, $slugNameAgenda);
+          if ($agendaUid == 'false') {
+            echo "false get uid agenda";
+            wp_die();
+          }
+
+          // On passe dans la db schedule sync=1
+          $wpdb->query('UPDATE '.$table_schedule.' SET sync = 1, event_uid = '.$eventUid.'  WHERE sched_id IN ('.$listeSchedIds.') ');
+
+        }   
+
+      // Verifie si tout les events du post sont synchronisé
+      $listeSyncEvent = $wpdb->get_results('SELECT sync FROM '.$ec3->schedule.' WHERE post_id = '.$id_post.';');
+      $syncOrNot = 1;
+      foreach ($listeSyncEvent as $key => $valSync) {
+        if ($valSync->sync != 1){
+          $syncOrNot = 0;
+        }
+      }
+      update_post_meta( $id_post, 'syncOrNot', $syncOrNot );
+  
+    echo "syncOk";
+    wp_die();
+    }
+
+}
+
+/************************************************************
+* Action sync sur la page Articles
+*************************************************************/
+ add_filter('manage_posts_columns', 'my_custom_columns');
+ function my_custom_columns($defaults) {
+    unset($defaults['author']);
+    //unset($defaults['tags']);
+    //$defaults['com'] = 'Tweets';
+    //$defaults['image'] = 'Image';
+    $defaults['sync'] = 'Sync';
+    return $defaults;
+  }
+
+add_action('manage_posts_custom_column',  'my_show_columns');
+ function my_show_columns($name) {
+     global $post;
+     $mypost = $post->ID;
+     switch ($name) {
+         case 'sync':
+             $reponse = get_post_meta( $mypost, 'syncOrNot' );
+             $envoie = '<p>Ajouter ou supprimer les evenements du post à Open Agenda<p>';
+             if ($reponse[0] == 1) {
+               // post synchonisé
+               $envoie = $envoie.'<div title="'.$mypost.'" class="toggle toggle-on" id="switch">';
+             }
+             else{
+              // post non synchonisé
+              $envoie = $envoie.'<div title="'.$mypost.'" class="toggle" id="switch">';
+             }
+
+              $envoie = $envoie.'<div class="toggle-text-off">NO</div>
+                            <div class="glow-comp"></div>
+                            <div class="toggle-button"></div>
+                            <div class="toggle-text-on">YES</div>
+                        </div>';
+
+             echo $envoie;
+             break;
+         case 'com':
+             $temp = get_post_meta($mypost,'ntweet',true);
+             if ( $temp < 1) $thecom = '0';
+             else $thecom = get_post_meta($mypost,'ntweet',true);
+             echo '
+
+<div>'.$thecom.'</div>
+
+';
+             break;
+ }}

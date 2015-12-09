@@ -316,3 +316,23 @@ td.ec3_eventday a.ec3_daynum:hover { color:white; background-color:#a00 }
  background-color:#eee;
 }
 
+/********************************************************************************
+* Calendar sidebar popup
+*********************************************************************************/
+#wp-calendar tbody tr td a{
+	display: inline-block;
+	width: 100%;
+}
+#wp-calendar tbody tr td span{
+  display: none;
+  position: absolute;
+  width: 50%;
+  background: rgba(1, 1, 1, 0.8) none repeat scroll 0% 0%;
+  color: white;
+  left: 50%;
+
+  transition: all 1s;
+}
+#wp-calendar tbody tr td:hover span{
+  display: block;
+}

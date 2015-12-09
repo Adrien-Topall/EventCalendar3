@@ -354,20 +354,26 @@ ec3.Calendar.prototype = {
   /** Dispatch an XMLHttpRequest for a month of calendar entries. */
   loadDates : function(month_num,year_num)
     {
+      //console.log(month_num);
+      //onsole.log(year_num);
       var req=new XMLHttpRequest();
       if(req)
       {
+        //console.log(ec3.home);
         this.reqs.push(req);
         var self = this;
         req.onreadystatechange = function(){self.process_xml();};
         if(month_num<10) {
         	var url=ec3.home+'/?feed=ec3xml&m='+year_num+'0'+month_num;
+          //var url=ec3+'wp-content/plugins/my-plugin/ajax_calendar.php?feed=ec3xml&m='+year_num+'0'+month_num;
         }
         else {
-			var url=ec3.home+'/?feed=ec3xml&m='+year_num+month_num;
-		}
+    			var url=ec3.home+'/?feed=ec3xml&m='+year_num+month_num;
+          //var url=ec3+'wp-content/plugins/my-plugin/ajax_calendar.php?feed=ec3xml&m='+year_num+month_num;
+		    }
         if(this.is_listing)
            url+='&ec3_listing=events';
+        //console.log(this.is_listing); 
         req.open("GET",url,true);
         this.set_spinner(1);
         req.send(null);
@@ -436,6 +442,7 @@ ec3.Calendar.prototype = {
   go_prev : function()
     {
       var calendars=this.get_calendars();
+      console.log(calendars);
       if(!calendars)
         return;
       var pn=calendars[0].parentNode;
@@ -533,6 +540,7 @@ ec3.Calendar.prototype = {
             this.reqs[i]=0;
             if(req.status==200)
               this.update_days( new ec3.xml.Calendar(req.responseXML) );
+              console.log(this.update_days);
           }
           else
             busy=1;
@@ -810,3 +818,5 @@ ec3.extend( ec3.xml.Event.prototype, {
       return result;
     }
 });
+      
+          

@@ -1,4 +1,6 @@
-<?php  if(!class_exists('MultiWidget')):
+<?php  
+
+if(!class_exists('MultiWidget')):
 
 /*
 Copyright (c) 2008 Alex Tingle.
@@ -371,4 +373,4 @@ add_action( 'widgets_init', array($example_multi,'register') );
 
 */
  
-endif ?>
+endif;

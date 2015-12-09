@@ -127,13 +127,16 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
        . $prev->month_link($this->show_only_events) . "'"
        . '>&laquo;&nbsp;' . $prev->month_abbrev() . "</a></td>";
 
-    $nav .= "\t<td><img id='$ec3spinnerid' style='display:none' src='" 
-       . $ec3->myfiles . "/ec_load.gif' alt='spinner' />";
+    /*$nav .= "\t<td><img id='$ec3spinnerid' style='display:none' src='" 
+       . $ec3->myfiles . "/ec_load.gif' alt='spinner' />";*/
     // iCalendar link. 
     //$webcal=get_feed_link('ical');
+       /*
     if ( get_option('permalink_structure') ) $webcal= home_url() . '/feed/ical'; else $webcal= home_url() . '/?feed=ical';
+      */
     // Macintosh always understands webcal:// protocol.
     // It's hard to guess on other platforms, so stick to http://
+      /*
     if(strstr($_SERVER['HTTP_USER_AGENT'],'Mac OS X'))
         $webcal=preg_replace('/^http:/','webcal:',$webcal);
     $nav .= "\t    <a id='$ec3publishid' href='$webcal'"
@@ -141,6 +144,24 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
        . "\t     <img src='$ec3->myfiles/publish.gif' alt='iCalendar' />"
        . "\t    </a>";
     $nav .= "\t</td>";
+      */
+    // Month
+      /*$title = sprintf(
+        __('View posts for %1$s %2$s'),
+        $this->dateobj->month_name(),
+        $this->dateobj->year_num
+      );*/
+      
+      setlocale(LC_TIME, "fr_FR");
+      $month = strftime('%B');
+
+      $nav .= "\t<td><a href='#' >". $month . "</a></td>";
+
+      /*$nav .=. '<caption>'
+      . '<a href="' . $this->dateobj->month_link($this->show_only_events)
+      . '" title="' . $title . '">'
+      . $this->dateobj->month_name() . ' ' . $this->dateobj->year_num . "</a>"
+      . "</caption>\n"*/
 
     // Next
     $next=$this->limit_dateobj;
@@ -148,7 +169,8 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
        . $next->month_link($this->show_only_events) . "'"
        . '>' . $next->month_abbrev() . "&nbsp;&raquo;</a></td>\n";
 
-    $nav .= "</tr></tbody></table>\n";
+    $nav .= "</tr>
+    </tbody></table>\n";
     return $nav;
   }
 
@@ -210,14 +232,21 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
     if(!empty($this->dayobj))
     {
       $td_classes[] = 'ec3_postday';
+
+      $popup = '<span>';
+      foreach ($dayarr as $key => $value) {
+                  $popup = $popup . $value .'<br>';
+                }
+      $popup =  $popup . '</span>';
+
       $a_attr = ' href="'.$this->dateobj->day_link($this->show_only_events)
-       . '" title="'.implode(', ',$dayarr).'"';
+       . '" ';
       if($this->dayobj->has_events())
       {
         $td_classes[] = 'ec3_eventday';
         $a_attr  .= ' class="eventday"';
       }
-      $daystr = "<a$a_attr>" . $this->dateobj->day_num . '</a>';
+      $daystr = "<a$a_attr>" . $this->dateobj->day_num . '</a>' . $popup;
     }
     else
     {

@@ -71,5 +71,3 @@ function ec3_the_schedule(
 {
   echo ec3_get_schedule($format_single,$format_range,$format_wrapper);
 }
-
-?>

@@ -24,7 +24,7 @@ if(function_exists('date_default_timezone_get')):
   function ec3_tz_push($tz)
   {
     $old_tz=date_default_timezone_get();
-    date_default_timezone_set($tz);
+    //date_default_timezone_set($tz);
     return $old_tz;
   }
   function ec3_tz_pop($tz)
@@ -573,4 +573,3 @@ function ec3_get_tz_options($selected='')
   }
 } // end function ec3_get_tz_options()
 
-?>

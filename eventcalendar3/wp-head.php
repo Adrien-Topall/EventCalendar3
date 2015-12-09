@@ -3,6 +3,8 @@
 	<!-- Added by Event-Calendar plugin. Version <?php echo $ec3->version; ?> -->
 	<script type='text/javascript' src='<?php echo $ec3->myfiles; ?>/xmlhttprequest.js'></script>
 	<script type='text/javascript' src='<?php echo $ec3->myfiles; ?>/ec3.js'></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script type='text/javascript' src='<?php echo $ec3->myfiles; ?>/new_cal.js'></script>
 	<script type='text/javascript'><!--
 	ec3.start_of_week=<?php echo intval( get_option('start_of_week') ); ?>;
 	ec3.month_of_year=new Array('<?php echo implode("','",$month); ?>');
@@ -34,4 +36,4 @@
 	</style>
 <![endif]-->
 
-<?php endif ?>
+<?php endif;

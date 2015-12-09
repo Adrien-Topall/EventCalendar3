@@ -198,4 +198,3 @@ function ec3_upgrade_posts_apply()
   return $changed_count;
 }
 
-?>

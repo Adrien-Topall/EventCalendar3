@@ -149,10 +149,10 @@ function ec3_action_widgets_init_cal()
           __( 'Display upcoming events in a dynamic calendar.','ec3')
               . ' (Event-Calendar '. __('Plugin') .')' ) 
   );
-  register_widget_control('event-calendar','ec3_widget_cal_control');
+  // register_widget_control('event-calendar','ec3_widget_cal_control'); Obsolete
+  wp_register_widget_control('id-widjet-event-calendar','event-calendar','ec3_widget_cal_control');
+  
 }
 
 
 add_action('widgets_init', 'ec3_action_widgets_init_cal');
-
-?>

@@ -29,3 +29,219 @@
 	border-bottom:solid 4px white;
 	background-color:#f8f8f8;
 }
+
+/*********************************************************************
+* page lieux
+**********************************************************************/
+
+.add-new-h2{
+  margin-left: 4px;
+  padding: 4px 8px;
+  position: relative;
+  top: -3px;
+  text-decoration: none;
+  border: none;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  background: #e0e0e0;
+  text-shadow: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+.add-new-h2:hover{
+	color: #fff;
+	background-color: #0091cd;
+}
+td.post-title .blockLink{
+  float: right;
+}
+
+/*********************************************************************
+* page paramettre
+**********************************************************************/
+tr.ec3_schedule_row td p{
+  line-height: inherit;
+}
+tr.ec3_schedule_row td input[type=text]{
+  max-width: 90px;
+}
+tr.ec3_schedule_row td:nth-child(-n+2){
+  min-width: 120px;
+}
+tr.ec3_schedule_row input, tr.ec3_schedule_row button, tr.ec3_schedule_row select{
+  vertical-align: bottom;
+}
+td label.radio_liste, td input.radio_liste{
+  vertical-align: bottom;
+}
+td.row_option{
+  width: 100%;
+  display: inline-block;
+  padding-top: 20px;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+}
+td.row_option label, td.row_option input{
+  vertical-align: top;
+}
+button.del{
+  vertical-align: top;
+  margin-left: 10px;
+}
+td label.radio_liste{
+  display: inline-block;
+  }
+
+
+/*********************************************************************
+* Fonction nav agenda
+**********************************************************************/
+.block_nav_agenda div{
+    display: inline-block;
+    background-color: red;
+  }
+
+/*********************************************************************
+* meta box
+**********************************************************************/
+  .ec3_schedule_row td input.radio_liste{
+    margin-right: 1rem;
+  }
+
+  #ec3_schedule_editor .paramDefault{
+    background: rgb(0, 115, 170) none repeat scroll 0% 0%;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+  }
+
+/*********************************************************************
+* icon Synchronisation
+**********************************************************************/
+
+.column-sync .dashicons{
+  font-size: 30px;
+  margin-right: 1rem;
+}
+.column-sync .dashicons:hover{
+  cursor: pointer;
+}
+.column-sync .dashicons-image-rotate{
+  font-size: 20px;
+  line-height: 30px;
+  color: #5B9DD9;
+}
+.column-sync .dashicons-no-alt,.column-sync .dashicons-yes{
+  color: #A00;
+}
+.column-sync .colorYes{
+  color: green;
+}
+
+
+#switch{
+    top: 0px;
+    left: 0%;
+    width: 70px;
+    height: 30px;
+}
+.toggle{
+    position: relative;
+    border: 2px solid #BF4B98;
+    border-radius: 20px;
+    -webkit-transition: border-color .6s  ease-out;
+    transition: border-color .6s  ease-out;
+    box-sizing: border-box;
+}
+.toggle.toggle-on{
+    border-color: rgba(137, 194, 217, .4);
+    -webkit-transition: all .5s .15s ease-out;
+    transition: all .5s .15s ease-out;
+}
+.toggle-button{
+    position: absolute;
+    top: 4px;
+    width: 19px;
+    bottom: 4px;
+    right: 39px;
+    background-color: #BF4B98;
+    border-radius: 19px; 
+    cursor: pointer;
+    -webkit-transition: all .3s .1s, width .1s, top .1s, bottom .1s;
+    transition: all .3s .1s, width .1s, top .1s, bottom .1s;
+}
+.toggle-on .toggle-button{
+    top: 3px;
+    width: 58px;
+    bottom: 3px;
+    right: 3px;
+    border-radius: 12px;
+    background-color: #65C982;
+    box-shadow: 0 0 10px #65C982;
+    -webkit-transition: all .2s .1s, right .1s;
+    transition: all .2s .1s, right .1s;
+}
+.toggle-text-on{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    line-height: 29px;
+    text-align: center;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+    cursor: pointer;
+    -webkit-user-select: none; /* Chrome/Safari */    
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
+
+
+    color: rgba(0,0,0,0);
+}
+.toggle-on .toggle-text-on{
+    color: #3b6a7d;
+    -webkit-transition: color .3s .15s ;
+    transition: color .3s .15s ;
+}
+.toggle-text-off{
+    position: absolute;
+    top: -4px;
+    bottom: 0;
+    right: 6px;
+    line-height: 36px;
+    text-align: center;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    -webkit-user-select: none; /* Chrome/Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+ */
+
+    cursor: pointer;
+
+    color: #BF4B98;
+}
+.toggle-on .toggle-text-off{
+    color: rgba(0,0,0,0);
+}
+/* used for streak effect */
+.glow-comp{
+    position: absolute;
+    opacity: 0;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    border-radius: 6px;
+    background-color: rgba(75, 122, 141, .1);
+    box-shadow: 0 0 12px rgba(75, 122, 141, .2);
+    -webkit-transition: opacity 4.5s 1s;
+    transition: opacity 4.5s 1s;
+}
+.toggle-on .glow-comp{
+    opacity: 1;
+    -webkit-transition: opacity 1s;
+    transition: opacity 1s;
+}
