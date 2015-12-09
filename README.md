@@ -3,6 +3,15 @@ EventCalendar3
 
 Event Calendar 3 Wordpress plugin by Alex Tingle updated to work with Wordpress 3.8
 
+**New version**
+
+Vous trouverez ici une nouvelle version en cour de developpement mais fonctionelle.
+Nouvelles fonctionalités :
+
+* Gestion des lieux
+* Nouvelle gestion des horraires
+* Synchronisation avec API Open Agenda
+
 **About**
 
 Manage future events as an online calendar. Display upcoming events in a dynamic calendar, on a listings page, or as a list in the sidebar. You can subscribe to the calendar from iCal (OSX), Sunbird or Google calendar.
