@@ -3,7 +3,7 @@ EventCalendar3
 
 Event Calendar 3 Wordpress plugin by Alex Tingle updated to work with Wordpress 3.8
 
-**New version**
+**New version, modify by Adrien Topall**
 
 Vous trouverez ici une nouvelle version en cour de developpement mais fonctionelle.
 
