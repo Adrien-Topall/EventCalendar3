@@ -19,14 +19,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 /*************************************************************************
 *             Définition des variables
 **************************************************************************/
-global $wpdb;
-global $ec3;
-
-$apikey = $ec3->OpenAgandaKey;
-$secretKey = $ec3->OpenAgandaSecretKey;
-$slugNameAgenda = $ec3->OpenAgandaSlugName;
-
-$randomnumber = rand(100000, 999999);
 
 $accessToken = '';
 $location_uid = '';
@@ -40,8 +32,11 @@ $listeEvents = '';
 /*************************************************************************
 *             Récuperation de l' accesToken
 **************************************************************************/
-function oa_connect($secretKey){
-  global $accessToken;
+function oa_connect(){
+  global $accessToken, $ec3;
+  $secretKey = $ec3->OpenAgandaSecretKey;
+  
+
   $ch = curl_init('https://api.openagenda.com/v1/requestAccessToken');
 
   curl_setopt($ch, CURLOPT_POST, true);
@@ -144,7 +139,13 @@ function oa_createLocation($accessToken, $id_lieux){
 /*************************************************************************
 *             Recupere info agenda à partir du slug Name
 **************************************************************************/
-function oa_getUidAgenda($key, $slugNameAgenda){
+function oa_getUidAgenda(){
+
+  global $ec3;
+
+  $key = $ec3->OpenAgandaKey;
+  $slugNameAgenda = $ec3->OpenAgandaSlugName;
+
   $ch_agenda = curl_init("https://api.openagenda.com/v1/agendas/uid/".$slugNameAgenda."?key=".$key."");
 
   curl_setopt($ch_agenda, CURLOPT_POST, false);
@@ -160,22 +161,6 @@ function oa_getUidAgenda($key, $slugNameAgenda){
   else{
     print_r($received_content);
   }
-/*
-  $ch_agendas = curl_init("https://api.openagenda.com/v1/agendas/".$agenda_uid."?key=".$key."");
-
-  curl_setopt($ch_agendas, CURLOPT_RETURNTRANSFER, TRUE);
-
-  $received_content2 = curl_exec($ch_agendas);
-
-  if (curl_getinfo($ch_agendas, CURLINFO_HTTP_CODE) == 200)
-  {
-    $data5 = json_decode($received_content2, true);
-    $agenda_title = $data5['data']['title'];
-    $agenda_url = $data5['data']['url'];
-    $agenda_description = $data5['data']['description'];
-  }
-*/
-  // Enregistrer les information dans la db ec3_oa_agenda
 
 }
 /*oa_getUidAgenda($key, $slugNameAgenda);
@@ -284,8 +269,11 @@ function oa_pushEventAgenda( $agenda_uid, $event_uid, $description, $accessToken
 /*************************************************************************
 *             liste des event d'un aganda
 **************************************************************************/
-function oa_getEvents( $agenda_uid, $key ){
-  global $listeEvents;
+function oa_getEvents( $agenda_uid ){
+  global $listeEvents, $ec3;
+
+  $key = $ec3->OpenAgandaKey;
+  
   $ch_listeEvent = curl_init("https://api.openagenda.com/v1/agendas/".$agenda_uid."/events?key=".$key."");
 
   curl_setopt($ch_listeEvent, CURLOPT_RETURNTRANSFER, TRUE);

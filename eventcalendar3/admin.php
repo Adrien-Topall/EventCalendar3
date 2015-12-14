@@ -100,7 +100,7 @@ class ec3_Admin
     <script type="text/javascript" src="<?php echo $ec3->myfiles; ?>/js/calendar.js"></script>
     <script type="text/javascript" src="<?php echo $ec3->myfiles; ?>/js/calendar-en.js"></script>
     <script type="text/javascript" src="<?php echo $ec3->myfiles; ?>/js/calendar-setup.js"></script>
-    
+
     <?php
   }
 
@@ -109,11 +109,10 @@ class ec3_Admin
   // EDIT FORM
   //
 
-
   /** Only for pre WP2.5. Inserts the Event Editor into the Write Post page. */
   function filter_edit_form()
   { ?>
-    
+
     <!-- Build the user interface for Event-Calendar. -->
     <div class="dbx-b-ox-wrapper">
     <fieldset id='ec3_schedule_editor' class="dbx-box">
@@ -129,8 +128,7 @@ class ec3_Admin
     </div>
     </fieldset>
     </div>
-
-    <?php
+<?php
   }
 
 
@@ -175,11 +173,11 @@ class ec3_Admin
     <?php
       if($schedule)
       {
-	  echo '<script>';
-	  echo 'var ec3_oldrows = new Array();';
-	  echo 'function ec3_show_oldrows(){ for (var i=0; i<ec3_oldrows.length; i++) ec3_oldrows[i].style.display = ""; }';
-	  echo 'function ec3_hide_oldrows(){ for (var i=0; i<ec3_oldrows.length; i++) ec3_oldrows[i].style.display = "none"; }';
-	  echo '</script>';
+  echo '<script>';
+  echo 'var ec3_oldrows = new Array();';
+  echo 'function ec3_show_oldrows(){ for (var i=0; i<ec3_oldrows.length; i++) ec3_oldrows[i].style.display = ""; }';
+  echo 'function ec3_hide_oldrows(){ for (var i=0; i<ec3_oldrows.length; i++) ec3_oldrows[i].style.display = "none"; }';
+  echo '</script>';
         foreach($schedule as $s){
             $time_start = substr($s->time_start, 0, 5);
             $time_end = substr($s->time_end, 0, 5);
@@ -188,7 +186,7 @@ class ec3_Admin
             );
           }
         $ec3_rows=count($schedule);
-	  echo '<script>ec3_hide_oldrows();</script>';
+  echo '<script>ec3_hide_oldrows();</script>';
       }
       $default=ec3_strftime('%Y-%m-%d',3600+time());
       $time_default = '00:00';
@@ -198,8 +196,8 @@ class ec3_Admin
        <td colspan="7" style="text-align:left">
         <p style="margin:0;padding:0;text-align:left">
           <span style="vertical-align:middle;"><input type="button" name="ec3_new_row" style="display: block; margin-bottom: 20px;" value=" + " title="<?php _e('Add a new event','ec3'); ?>" onclick="if (document.getElementById('ec3_repeat_check').checked && document.getElementById('ec3_repeat_count').value == '') { alert('Please enter a repeat number!'); return false; } else if (document.getElementById('ec3_repeatuntil_check').checked && (document.getElementById('ec3_repeatuntil_date').value == '' || document.getElementById('ec3_repeatuntil_date').value == 'yyyy-mm-dd')) { alert('Please enter a repeat end date!'); return false; } else { if (ec3_repeatuntil_check.checked) { Ec3EditForm.add_row(ec3_repeatuntil_check.checked,ec3_repeatuntil_date.value,ec3_repeatuntil_type.value); } else { Ec3EditForm.add_row(ec3_repeat_check.checked,ec3_repeat_count.value,ec3_repeat_type.value); } }" /></span>
-	  <span style="vertical-align:middle;">&nbsp;&nbsp;<input type="checkbox" onclick="if (this.checked) { ec3_show_oldrows(); } else { ec3_hide_oldrows(); }"></span>
-	  <span style="vertical-align:middle;">Show past events</span>
+    <span style="vertical-align:middle;">&nbsp;&nbsp;<input type="checkbox" onclick="if (this.checked) { ec3_show_oldrows(); } else { ec3_hide_oldrows(); }"></span>
+    <span style="vertical-align:middle;">Show past events</span>
           <br>
 
           <div class="paramDefault">
@@ -212,7 +210,7 @@ class ec3_Admin
             <label for="fin">fin :</label><input type="text" size="3" maxlength="5" disabled="disabled" placeholder="00:00">
           </div>
 
-	    <span style="vertical-align:middle;">&nbsp;&nbsp;<input type="checkbox" name="ec3_repeat_check" id="ec3_repeat_check" value="yes" onclick="if (this.checked && document.getElementById('ec3_repeatuntil_check').checked) document.getElementById('ec3_repeatuntil_check').click(); document.getElementById('ec3_repeat_type').disabled = !this.checked; document.getElementById('ec3_repeat_count').disabled = !this.checked;" /></span>
+      <span style="vertical-align:middle;">&nbsp;&nbsp;<input type="checkbox" name="ec3_repeat_check" id="ec3_repeat_check" value="yes" onclick="if (this.checked && document.getElementById('ec3_repeatuntil_check').checked) document.getElementById('ec3_repeatuntil_check').click(); document.getElementById('ec3_repeat_type').disabled = !this.checked; document.getElementById('ec3_repeat_count').disabled = !this.checked;" /></span>
 
           <span style="vertical-align:middle;">Repeat last entry for</span>
           <span style="vertical-align:middle;"><input type="text" name="ec3_repeat_count" id="ec3_repeat_count" size="4" style="font-size:8pt;" disabled /></span>
@@ -230,7 +228,7 @@ class ec3_Admin
             <option value="opt3">month (e.g. 2nd Monday of every month)</option>
           </select></span>
           <span style="vertical-align:middle;">until</span>
-	    <span style="vertical-align:bottom;"><input type="text" size="10" maxlength="10" value="yyyy-mm-dd" onclick="if (this.value=='yyyy-mm-dd') this.value='';" onblur="if (this.value=='') this.value='yyyy-mm-dd';" name="ec3_repeatuntil_count" id="ec3_repeatuntil_date" size="4" style="font-size:8pt;" disabled /></span>
+      <span style="vertical-align:bottom;"><input type="text" size="10" maxlength="10" value="yyyy-mm-dd" onclick="if (this.value=='yyyy-mm-dd') this.value='';" onblur="if (this.value=='') this.value='yyyy-mm-dd';" name="ec3_repeatuntil_count" id="ec3_repeatuntil_date" size="4" style="font-size:8pt;" disabled /></span>
           <input type="hidden" id="ec3_rows" name="ec3_rows" value="<?php echo $ec3_rows; ?>" />
 
         </p>
@@ -314,7 +312,7 @@ class ec3_Admin
           return;
     }
     global $ec3,$wpdb;
-    
+
     $tablePost = $wpdb->prefix . 'posts';
     $testType = $wpdb->get_row('SELECT post_type FROM '.$tablePost.' WHERE ID = '.$post_ID.' ');
     if ( $testType->post_type == 'revision' ) {
@@ -327,7 +325,7 @@ class ec3_Admin
        $this->save_post_called=array();
     $this->save_post_called[$post_ID]=true;
 
-    
+
     // Use this to check the DB before DELETE/UPDATE. Should use
     // ...IGNORE, but some people insist on using ancient version of MySQL.
     $count_where="SELECT COUNT(0) FROM $ec3->schedule WHERE";
@@ -346,7 +344,7 @@ class ec3_Admin
     $idLieuDef = $_POST['ec3_def_lieux'];
     update_post_meta($post_ID, 'ec3_lieu_default', $idLieuDef);
 
-    
+
     foreach($_POST as $k => $v)
     {
       if(preg_match('/^ec3_(action|'.implode('|',$fields).')_(_?)([0-9]+)$/',$k,$match))
@@ -415,7 +413,7 @@ class ec3_Admin
           WHERE post_id=$post_ID
             AND sched_id=$sid"
         );
-        
+
       elseif($action=='create'):
         $val_lieu = $vals['lieux'];
         if ($val_lieu == 99999) {
@@ -431,9 +429,9 @@ class ec3_Admin
         $val_Tend = $vals['timeEnd'];
         $val_allday = $vals['allday'];
         $val_rpt = $vals['rpt'];
-        
+
         $wpdb->insert( $ec3->schedule, array( 'post_id' => $post_ID, 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'sequence' => '1', 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'event_uid' => '0') );
-        
+
       endif;
     }
 
@@ -446,7 +444,7 @@ class ec3_Admin
       }
     }
     update_post_meta( $post_ID, 'syncOrNot', $syncOrNot );
-      
+
     // Force all end dates to be >= start dates.
     $wpdb->query("UPDATE $ec3->schedule SET end=start WHERE end<start");
 
@@ -460,7 +458,7 @@ class ec3_Admin
         $result[]=$key."=".$value;
     return implode($glue,$result);
   }
-  
+
   /** Clear events for the post. */
   function action_delete_post($post_ID)
   {
@@ -613,7 +611,7 @@ class ec3_Admin
     $OpenAgandaKey = $ec3->OpenAgandaKey;
     $OpenAgandaSecretKey = $ec3->OpenAgandaSecretKey;
     $OpenAgandaSlugName = $ec3->OpenAgandaSlugName;
-    
+
     if(isset($_POST['info_update']))
     {
       echo '<div id="message" class="updated fade"><p><strong>';
@@ -625,7 +623,7 @@ class ec3_Admin
           $ec3->set_advanced( intval($_POST['ec3_advanced']) );
       if(isset($_POST['ec3_tz']))
           $ec3->set_tz( $_POST['ec3_tz'] );
-        
+
         // listPostType
       //$newlistPostType = 'post';
 /*
@@ -691,8 +689,7 @@ class ec3_Admin
       echo '</strong></p></div>';
     }
     ?>
-
-   <div class="wrap">
+    <div class="wrap">
     <form method="post">
      <h2><?php _e('Event Calendar Options','ec3'); ?></h2>
 
@@ -725,7 +722,7 @@ class ec3_Admin
        <tr valign="top"> 
         <th width="33%" scope="row"><?php _e('Show times within post content','ec3'); ?>:</th> 
         <td>
-         <select name="ec3_show_event_box">          
+         <select name="ec3_show_event_box">
           <option value='0'<?php if($ec3->show_event_box==0) echo " selected='selected'" ?> >
            <?php _e('Hide Times','ec3'); ?>
           </option>
@@ -780,20 +777,20 @@ class ec3_Admin
       <?php //endif; ?>
       </tr>
 
-      <?php 
-        
+      <?php
+
         $liste_option = $wpdb->get_results("SELECT * FROM $table_opt");
       ?>
-      
+
       <tr valign="top" id="block_liste_option">
         <th width="33%" scope="row"><?php _e('Créer des options sur l\'etat des evenement','ec3'); ?>:</th> 
         <?php if(count($liste_option) > 0): ?>
           <?php foreach ($liste_option as $value) { ?>
             <td class="row_option">
-                
+
                 <label for="nom_option_modif_<?php echo $value->option_id; ?>">Nom :</label>
                 <input type="text" name="nom_option_modif_<?php echo $value->option_id; ?>" id="nom_option_modif_<?php echo $value->option_id; ?>" value="<?php echo $value->nom; ?>" >
-              
+
                 <label for="message_option_modif_<?php echo $value->option_id; ?>" >Message :</label>
                 <textarea name="message_option_modif_<?php echo $value->option_id; ?>" id="message_option_modif_<?php echo $value->option_id; ?>" cols="40" rows="1" ><?php echo $value->message; ?></textarea>
                 <button class="del" >-</button>
@@ -828,6 +825,7 @@ class ec3_Admin
           <td class="row_option">
             <button id="syncNow">Synchroniser Maintenant</button>
             <div id="reponseA"></div>
+            <p><?php print_r($ec3->tz); ?></p>
           </td>
         </tr>
      </table>
@@ -841,7 +839,7 @@ class ec3_Admin
               e.preventDefault();
               nbr++;
               $(' <td class="row_option"><label for="nom_option_new_'+nbr+'">Nom : </label><input type="text" name="nom_option_new_'+nbr+'" id="nom_option_new_'+nbr+'" ><label for="message_option_new_'+nbr+'" > Message : </label><textarea name="message_option_new_'+nbr+'" id="message_option_new_'+nbr+'" cols="40" rows="1"></textarea><button class="del" > -</button></td>').insertBefore('#new_block');
-              
+
               $('button.del').click(function(event){
                 event.preventDefault();
                 $(this).parent().css({"display":"none"});
@@ -892,7 +890,7 @@ function ec3_options_subpanel()
     ec3_upgrade_posts();
     return;
   }
-  
+
   // Normal options page...
   $ec3_admin->options_subpanel();
 }
@@ -906,7 +904,7 @@ function ec3_event_editor_box()
 
 //
 // Hook in...
-if($ec3->event_category)
+if( !empty($ec3->event_category) || isset($ec3->event_category) )
 {
   add_filter('admin_head', array(&$ec3_admin,'filter_admin_head'));
   add_action('save_post',  array(&$ec3_admin,'action_save_post'));

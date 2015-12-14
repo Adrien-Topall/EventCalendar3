@@ -24,7 +24,7 @@ if(function_exists('date_default_timezone_get')):
   function ec3_tz_push($tz)
   {
     $old_tz=date_default_timezone_get();
-    //date_default_timezone_set($tz);
+    //$old_tz=date_default_timezone_set();
     return $old_tz;
   }
   function ec3_tz_pop($tz)
@@ -90,9 +90,9 @@ function ec3_strftime($format,$unix_time=0)
   if(!$unix_time)
       $unix_time=time();
   // Express the Unix time as a string for timezone $ec3->tz.
-  $old_tz=ec3_tz_push($ec3->tz);
+  //$old_tz=ec3_tz_push($ec3->tz);
   $result = strftime($format,$unix_time);
-  ec3_tz_pop($old_tz);
+  //ec3_tz_pop($old_tz);
   return $result;
 }
 

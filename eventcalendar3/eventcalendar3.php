@@ -28,6 +28,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 function create_plugin_database_table() {
   global $wpdb;
+
+  // Check version - return if no upgrade required.
+  $installed_version=get_option('ec3_version');
+  if($installed_version== '3.4')
+    return;
+
+  $v0 = new ec3_Version($installed_version);
+  $v1 = new ec3_Version('3.4');
+  if( $v0->cmp($v1) > 0 )
+    return; // Installed version later than this one ?!?!
   
   $table_schedule = $wpdb->prefix . 'ec3_schedule';
   $table_lieux = $wpdb->prefix . 'ec3_lieux';
@@ -170,8 +180,7 @@ require_once(dirname(__FILE__).'/tz.php');
 require_once(dirname(__FILE__).'/widget-calendar.php');
 require_once(dirname(__FILE__).'/widget-list.php');
 require_once(dirname(__FILE__).'/lieux.php');
-//require_once(dirname(__FILE__).'/api-openAgenda.php');
-//require_once(dirname(__FILE__).'/api-sync.php');
+
 
 $ec3_today_id=str_replace('_0','_',ec3_strftime("ec3_%Y_%m_%d"));
 
@@ -838,7 +847,7 @@ add_action('init','creation_type_ec3');*/
 add_action( 'admin_footer', 'my_action_javascript' ); // Write our JS below here
 
 function my_action_javascript() { ?>
-  <script type="text/javascript" >
+<script type="text/javascript" >
   jQuery(document).ready(function($) {
 
     var data = {
@@ -884,14 +893,14 @@ function my_action_javascript() { ?>
     });
 
   });
-  </script> <?php
+  </script><?php
 }
 
 add_action( 'wp_ajax_my_action', 'my_action_callback' );
 add_action( 'wp_ajax_sync_post', 'sync_post_callback' );
 
 function my_action_callback() {
-  global $wpdb, $apikey, $secretKey, $ec3, $slugNameAgenda; 
+  global $wpdb, $ec3; 
   $table_schedule = $wpdb->prefix . 'ec3_schedule';
   $table_oa_event = $wpdb->prefix . 'ec3_oa_event';
   $table_lieux = $wpdb->prefix . 'ec3_lieux';
@@ -907,7 +916,7 @@ function my_action_callback() {
 
   if ( $tous_les_posts ) {
 
-    $accessToken = oa_connect($secretKey);
+    $accessToken = oa_connect();
     //echo "wrong way";
     foreach ($tous_les_posts as $key => $value) {
       
@@ -984,7 +993,7 @@ function my_action_callback() {
           
           // on récupère l'Uid de l'agenda
           // TODO : stocker cette info dans db_option
-          $agendaUid = oa_getUidAgenda($apikey, $slugNameAgenda);
+          $agendaUid = oa_getUidAgenda();
 
           $retourPush = oa_pushEventAgenda( $agendaUid, $eventUid, $description, $accessToken );
           if ($retourPush != 'false' && $retourPush == 'ok') {
@@ -1021,7 +1030,7 @@ function my_action_callback() {
 *************************************************************/
 
 function sync_post_callback() {
-  global $wpdb, $apikey, $secretKey, $ec3, $slugNameAgenda; 
+  global $wpdb, $ec3; 
   $table_schedule = $wpdb->prefix . 'ec3_schedule';
   $table_oa_event = $wpdb->prefix . 'ec3_oa_event';
   $table_lieux = $wpdb->prefix . 'ec3_lieux';
@@ -1035,7 +1044,7 @@ function sync_post_callback() {
   $sync = $_POST['sync'];
 
 
-  $accessToken = oa_connect($secretKey);
+  $accessToken = oa_connect();
 
     if ( $sync == 'already' ) {
       // On désynchronise les events du post
@@ -1133,7 +1142,7 @@ function sync_post_callback() {
           
           // on récupère l'Uid de l'agenda
           // TODO : stocker cette info dans db_option
-          $agendaUid = oa_getUidAgenda($apikey, $slugNameAgenda);
+          $agendaUid = oa_getUidAgenda();
           if ($agendaUid == 'false') {
             echo "false get uid agenda";
             wp_die();
