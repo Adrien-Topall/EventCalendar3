@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class ec3_Options
 {
   // Some global variables.
-  var $version='3.4';
+  var $version='3.4.1';
   var $myfiles='';
   var $call_count=0;
   var $schedule='ec3_schedule'; // table name

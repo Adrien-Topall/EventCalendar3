@@ -146,7 +146,8 @@ class ec3_Admin
            allday,
            lieux_id,
            option_id,
-           rpt
+           rpt,
+           info_shed
          FROM $ec3->schedule WHERE post_id=$post_ID ORDER BY start");
     else
       $schedule = false;
@@ -161,13 +162,12 @@ class ec3_Admin
     <!-- Event-Calendar: Event Editor -->
     <table cellspacing="2" cellpadding="5" class="editform" style="position : relative;">
      <thead><tr>
-      <th><?php _e('Start','ec3'); ?></th>
-      <th><?php _e('End','ec3'); ?></th>
-      <th><?php _e('Time Start','ec3'); ?></th>
-      <th><?php _e('Time End','ec3'); ?></th>
+      <th><?php _e('Start','ec3'); ?> / <?php _e('End','ec3'); ?></th>
+      <th><?php _e('Time Start','ec3'); ?> / <?php _e('End','ec3'); ?></th>
       <th style="text-align:center"><?php _e('All Day','ec3'); ?></th>
       <th style="text-align:center"><?php _e('Lieux','ec3'); ?></th>
       <th><?php _e('Options','ec3'); ?></th>
+      <th><?php _e('Info','ec3'); ?></th>
      </tr></thead>
      <tbody>
     <?php
@@ -182,7 +182,7 @@ class ec3_Admin
             $time_start = substr($s->time_start, 0, 5);
             $time_end = substr($s->time_end, 0, 5);
             $this->schedule_row(
-              $s->start,$s->end,$time_start,$time_end,$s->sched_id,'update',$s->allday,$s->lieux_id,$s->option_id
+              $s->start,$s->end,$time_start,$time_end,$s->sched_id,'update',$s->allday,$s->lieux_id,$s->option_id,$s->info_shed
             );
           }
         $ec3_rows=count($schedule);
@@ -190,7 +190,7 @@ class ec3_Admin
       }
       $default=ec3_strftime('%Y-%m-%d',3600+time());
       $time_default = '00:00';
-      $this->schedule_row($default,$default,$time_default,$time_default,'','create',False,'','');
+      $this->schedule_row($default,$default,$time_default,$time_default,'','create',False,'','','');
     ?>
       <tr> 
        <td colspan="7" style="text-align:left">
@@ -242,7 +242,7 @@ class ec3_Admin
   }
 
   /** Utility function called by event_editor_box(). */
-  function schedule_row($start,$end,$time_start,$time_end,$sid,$action,$allday,$lieux_id,$option_id)
+  function schedule_row($start,$end,$time_start,$time_end,$sid,$action,$allday,$lieux_id,$option_id,$info_shed)
   {
       global $post_ID;
     $s="ec3_start_$sid";
@@ -254,25 +254,27 @@ class ec3_Admin
       <tr class="ec3_schedule_row" valign="middle" id="ec3_tr_<?php echo $sid; ?>" name="ec3_tr_<?php echo $sid; ?>" <?php
        if('create'==$action){ echo ' style="display:none"'; } ?>>
        <td>
+        <!-- Start -->
         <input type="hidden" name="ec3_action_<?php echo $sid;
          ?>" value="<?php echo $action; ?>" />
         <input type="text" name="<?php echo $s;
          if('update'==$action){ echo "\" id=\"$s"; }
          ?>" value="<?php echo $start; ?>" />
         <button type="reset" id="trigger_<?php echo $s; ?>">&hellip;</button>
-       </td>
-       <td>
+        </br>
+        <!-- End -->
         <input type="text" name="<?php echo $e;
          if('update'==$action){ echo "\" id=\"$e"; }
          ?>" value="<?php echo $end; ?>" />
         <button type="reset" id="trigger_<?php echo $e; ?>">&hellip;</button>
        </td>
        <td>
+        <!-- Time Start -->
         <input type="text" name="<?php echo $ts;
          if('update'==$action){ echo "\" id=\"$ts"; }
          ?>" value="<?php echo $time_start; ?>" />
-       </td>
-       <td>
+        </br>
+        <!-- Time Start -->
         <input type="text" name="<?php echo $te;
          if('update'==$action){ echo "\" id=\"$te"; }
          ?>" value="<?php echo $time_end; ?>" />
@@ -286,6 +288,9 @@ class ec3_Admin
        </td>
         <td>
           <?php get_option_event($sid,$post_ID); ?>
+        </td>
+        <td>
+          <textarea name="ec3_info_<?php echo $sid; ?>" id="ec3_info_<?php echo $sid; ?>" cols="30" rows="2"><?php echo stripslashes( $info_shed ); ?></textarea>
         </td>
         <td>
         <p style="margin:0;padding:0">
@@ -308,8 +313,14 @@ class ec3_Admin
 
     if(function_exists('wp_verify_nonce'))
     {
-      if(!wp_verify_nonce($_POST['ec3_nonce'], plugin_basename(__FILE__) ))
+      if (isset($_POST['ec3_nonce'])) {
+        if(!wp_verify_nonce($_POST['ec3_nonce'], plugin_basename(__FILE__) )){
           return;
+        }
+      }
+      else{
+        return;
+      }     
     }
     global $ec3,$wpdb;
 
@@ -340,7 +351,7 @@ class ec3_Admin
 
     // Find all of our parameters
     $sched_entries=array();
-    $fields =array('start','end','timeStart','timeEnd','allday','rpt','lieux','option');
+    $fields =array('start','end','timeStart','timeEnd','allday','rpt','lieux','option','info');
     $idLieuDef = $_POST['ec3_def_lieux'];
     update_post_meta($post_ID, 'ec3_lieu_default', $idLieuDef);
 
@@ -378,6 +389,9 @@ class ec3_Admin
           elseif ('option'==$k) {
             $vals[$k]=$v;
           }
+          elseif ('info'==$k) {
+            $vals[$k] = $v ;
+          }
           elseif ('timeStart'==$k || 'timeEnd'==$k) {
             $vals[$k]= "'".$v.":00'";
           }
@@ -404,8 +418,9 @@ class ec3_Admin
         $val_Tend = $vals['timeEnd'];
         $val_allday = $vals['allday'];
         $val_rpt = $vals['rpt'];
+        $val_info = $vals['info'];
         //$sync = '0';
-        $wpdb->update( $ec3->schedule, array( 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0' ), array( 'sched_id' => $sid, 'post_id' => $post_ID ) );
+        $wpdb->update( $ec3->schedule, array( 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'info_shed' => $val_info ), array( 'sched_id' => $sid, 'post_id' => $post_ID ) );
 
         $wpdb->query(
          "UPDATE $ec3->schedule
@@ -429,8 +444,9 @@ class ec3_Admin
         $val_Tend = $vals['timeEnd'];
         $val_allday = $vals['allday'];
         $val_rpt = $vals['rpt'];
+        $val_info = $vals['info'];
 
-        $wpdb->insert( $ec3->schedule, array( 'post_id' => $post_ID, 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'sequence' => '1', 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'event_uid' => '0') );
+        $wpdb->insert( $ec3->schedule, array( 'post_id' => $post_ID, 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'sequence' => '1', 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'event_uid' => '0', 'info_shed' => $val_info) );
 
       endif;
     }

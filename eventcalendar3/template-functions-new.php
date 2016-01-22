@@ -646,9 +646,9 @@ function ec3_get_iconlets()
     $year_start =ec3_get_start_date('Y');
     $month_start=ec3_get_start_date('M');
     $day_start  =ec3_get_start_date('j');
-    // Don't bother about intra-day details.
-    if($current==$day_start.$month_start.$year_start)
-      continue;
+    // Don't bother about intra-day details. Empeche d'afficher plusieur fois le même jour.
+    /*if($current==$day_start.$month_start.$year_start)
+      continue;*/
     $current=$day_start.$month_start.$year_start;
     // Grey-out past events.
     if($ec3->event->active)
@@ -664,9 +664,28 @@ function ec3_get_iconlets()
     {
       // Event with start time.
       $time_start=ec3_get_start_time();
-      $result.="<tr class='ec3_month'><td>$month_start</td></tr>"
+      
+      if( substr($ec3->event->start,0,10) < substr($ec3->event->end,0,10) )
+      {
+        $month_end=ec3_get_end_date('M');
+        $day_end  =ec3_get_end_date('j');
+        $time_end  =ec3_get_end_time();
+        $result.="<tr class='ec3_month'>"
+             .  "<td class='ec3_multi_start'>$month_start</td>"
+             .  "<td class='ec3_multi_end'>$month_end</td></tr>";
+        $result.="<tr class='ec3_day'>"
+               .  "<td class='ec3_multi_start'>$day_start</td>"
+               .  "<td class='ec3_multi_end'>$day_end</td></tr>";
+        $result.="<tr class='ec3_time'>"
+                  ."<td>$time_start</td>"
+                  ."<td>$time_end</td></tr>";
+      }
+      else{
+        $result.="<tr class='ec3_month'><td>$month_start</td></tr>"
              . "<tr class='ec3_day'><td>$day_start</td></tr>"
              . "<tr class='ec3_time'><td>$time_start</td></tr>";
+      }
+      
     }
     elseif(substr($ec3->event->start,0,10) == substr($ec3->event->end,0,10))
     {
@@ -686,7 +705,15 @@ function ec3_get_iconlets()
              .  "<td class='ec3_multi_start'>$day_start</td>"
              .  "<td class='ec3_multi_end'>$day_end</td></tr>";
     }
-    $result.="</tbody></table></div>\n";
+    //echo stripslashes($ec3->event->info_shed);
+    if (!empty($ec3->event->info_shed)) {
+      $bulle = stripslashes($ec3->event->info_shed);
+      $result.="<tr><td class='bulle'>$bulle</td></tr></tbody></table></div>\n";
+    }
+    else{
+      $result.="</tbody></table></div>\n";
+    }
+    
   }
   return apply_filters( 'ec3_filter_iconlets', $result );
 }

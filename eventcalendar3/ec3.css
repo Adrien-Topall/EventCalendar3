@@ -172,6 +172,24 @@ div.ec3_iconlet {
  float:left;
  font-size:1em;
  text-align:center;
+ position: relative;
+
+ transition: all 0.6s;
+}
+
+div.ec3_iconlet .bulle{
+  position: absolute;
+  background-color: rgb(174, 174, 174);
+  padding: 5px 10px;
+  top: -30px;
+  display: none;
+  left: 50%;
+
+  display: none;
+}
+
+div.ec3_iconlet:hover .bulle{
+  display: block;
 }
 
 div.ec3_past {
