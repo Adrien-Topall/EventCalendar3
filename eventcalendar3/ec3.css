@@ -5,13 +5,26 @@
 /***
  ***  Calendar
  ***/
+#wp-calendar{
+  position: relative;
+ }
+
+#wp-calendar table.nav{
+  position: absolute;
+  padding: 5px 10px;
+}
 
 #wp-calendar table {
  width:100%;
 }
 
 #wp-calendar table caption {
-  text-align:center;
+    text-align: center;
+    width: 50%;
+    margin: 0px auto;
+    position: relative;
+    z-index: 2;
+}
 }
 
 #wp-calendar #prev {

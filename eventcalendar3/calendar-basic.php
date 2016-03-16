@@ -305,7 +305,10 @@ class ec3_BasicCalendar
         }
         // insert day
         $datetime    =  $curr_dateobj->to_mysqldate();
-        $this->dayobj=  $this->_days[$datetime]; // might be empty
+        if ( isset($this->_days[$datetime]) ) {
+          $this->dayobj=  $this->_days[$datetime]; // might be empty
+        }
+        //$this->dayobj=  $this->_days[$datetime]; // might be empty
         $dayarr      =  $this->make_day();
         $weekstr     .= $this->wrap_day($dayarr);
 

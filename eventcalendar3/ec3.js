@@ -255,11 +255,11 @@ ec3.Calendar.prototype = {
         //var url=ec3.home+'/?feed=ec3xml&year='+year_num+'&monthnum='+month_num;
 	  if(month_num<10) 
 	  {
-	    c.href=ec3.home+'/?m='+year_num+'0'+month_num;
+	    c.href=ec3.home+'/?m='+year_num+'0'+month_num+'&ec3_listing=all';
 	  }
 	  else
 	  {
-	    c.href=ec3.home+'/?m='+year_num+month_num;
+	    c.href=ec3.home+'/?m='+year_num+month_num+'&ec3_listing=all';
 	  }
           if(this.is_listing)
              c.href+='&ec3_listing=events';

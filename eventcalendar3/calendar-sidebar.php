@@ -155,7 +155,7 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
       setlocale(LC_TIME, "fr_FR");
       $month = strftime('%B');
 
-      $nav .= "\t<td><a href='#' >". $month . "</a></td>";
+      $nav .= "\t<td style='width: 50%;'><a href='#' ></a></td>";
 
       /*$nav .=. '<caption>'
       . '<a href="' . $this->dateobj->month_link($this->show_only_events)
@@ -185,12 +185,13 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
       );
     $result =  '<table id="'.$this->id.'-'.$this->dateobj->month_id().'">'."\n"
       . '<caption>'
-      . '<a href="' . $this->dateobj->month_link($this->show_only_events)
+      . '<a href="' . $this->dateobj->month_link($this->show_only_events) .'&ec3_listing=all'
       . '" title="' . $title . '">'
       . $this->dateobj->month_name() . ' ' . $this->dateobj->year_num . "</a>"
       . "</caption>\n"
       . $this->_thead
       . "<tbody>\n" . $monthstr . "</tbody>\n</table>\n";
+
     return $result;
   }
 

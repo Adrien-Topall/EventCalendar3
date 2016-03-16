@@ -387,10 +387,10 @@ class ec3_Admin
             $vals[$k]= $v;
           }*/
           elseif ('option'==$k) {
-            $vals[$k]=$v;
+            $vals[$k] = $v;
           }
           elseif ('info'==$k) {
-            $vals[$k] = $v ;
+            $vals[$k] = $v;
           }
           elseif ('timeStart'==$k || 'timeEnd'==$k) {
             $vals[$k]= "'".$v.":00'";
