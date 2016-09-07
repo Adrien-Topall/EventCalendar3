@@ -27,8 +27,7 @@ function ec3_check_installed($title)
     <div style="background-color:black; color:red; border:2px solid red; padding:1em">
      <div style="font-size:large"><?php echo $title; ?></div>
      <?php _e('You must choose an event category.','ec3'); ?>
-     <a style="color:red; text-decoration:underline" href="<?php echo
-       get_option('home');?>/wp-admin/options-general.php?page=ec3_admin">
+     <a style="color:red; text-decoration:underline" href="<?php echo get_option('home');?>/wp-admin/options-general.php?page=ec3_admin">
       <?php _e('Go to Event Calendar Options','ec3'); ?>
      </a>
     </div>

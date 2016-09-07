@@ -136,7 +136,7 @@ function ec3_get_start_time($d='')
   elseif($event->allday)
     return __('all day','ec3');
   $d = empty($d)? get_option('time_format'): $d;
-  return mysql2date($d,$event->time_start);
+  return mysql2date($d,$event->start);
 }
 
 /** Get the end time of the current event. */
@@ -146,7 +146,7 @@ function ec3_get_end_time($d='')
   if(empty($event) || $event->allday)
     return '';
   $d = empty($d)? get_option('time_format'): $d;
-  return mysql2date($d,$event->time_end);
+  return mysql2date($d,$event->end);
 
 }
 
@@ -639,6 +639,7 @@ function ec3_get_iconlets()
 
   global $ec3;
   $result='';
+
   $current=false;
   $this_year=date('Y');
   for($evt=ec3_iter_post_events(); $evt->valid(); $evt->next())
@@ -659,6 +660,7 @@ function ec3_get_iconlets()
     if($year_start!=$this_year)
       $month_start.='&nbsp;&rsquo;'.substr($year_start,2);
     // OK, make the iconlet.
+    //$result.='<pre></pre>';
     $result.="<div class='ec3_iconlet$active'><table><tbody>";
     if(!$ec3->event->allday)
     {
@@ -716,6 +718,94 @@ function ec3_get_iconlets()
     
   }
   return apply_filters( 'ec3_filter_iconlets', $result );
+}
+
+/** Formats the schedule for the current post as one or more 'iconlets'.
+ *  Returns the HTML fragment as a string. */
+function ec3_get_iconlets_active()
+{
+  if(!ec3_is_event())
+    return '';
+
+  global $ec3;
+  $result='';
+  $current=false;
+  $this_year=date('Y');
+  for($evt=ec3_iter_post_events(); $evt->valid(); $evt->next())
+  {
+    $year_start =ec3_get_start_date('Y');
+    $month_start=ec3_get_start_date('M');
+    $day_start  =ec3_get_start_date('j');
+    // Don't bother about intra-day details. Empeche d'afficher plusieur fois le même jour.
+    /*if($current==$day_start.$month_start.$year_start)
+      continue;*/
+    $current=$day_start.$month_start.$year_start;
+    // Grey-out past events.
+    if( $ec3->event->active){
+      // Only put the year in if it isn't *this* year.
+      if($year_start!=$this_year)
+        $month_start.='&nbsp;&rsquo;'.substr($year_start,2);
+      // OK, make the iconlet.
+      $result.="<div class='ec3_iconlet'><table><tbody>";
+      if(!$ec3->event->allday)
+      {
+        // Event with start time.
+        $time_start=ec3_get_start_time();
+        
+        if( substr($ec3->event->start,0,10) < substr($ec3->event->end,0,10) )
+        {
+          $month_end=ec3_get_end_date('M');
+          $day_end  =ec3_get_end_date('j');
+          $time_end  =ec3_get_end_time();
+          $result.="<tr class='ec3_month'>"
+               .  "<td class='ec3_multi_start'>$month_start</td>"
+               .  "<td class='ec3_multi_end'>$month_end</td></tr>";
+          $result.="<tr class='ec3_day'>"
+                 .  "<td class='ec3_multi_start'>$day_start</td>"
+                 .  "<td class='ec3_multi_end'>$day_end</td></tr>";
+          $result.="<tr class='ec3_time'>"
+                    ."<td>$time_start</td>"
+                    ."<td>$time_end</td></tr>";
+        }
+        else{
+          $result.="<tr class='ec3_month'><td>$month_start</td></tr>"
+               . "<tr class='ec3_day'><td>$day_start</td></tr>"
+               . "<tr class='ec3_time'><td>$time_start</td></tr>";
+        }
+        
+      }
+      elseif(substr($ec3->event->start,0,10) == substr($ec3->event->end,0,10))
+      {
+        // Single, all-day event.
+        $result.="<tr class='ec3_month'><td>$month_start</td></tr>"
+               . "<tr class='ec3_day'><td>$day_start</td></tr>";
+      }
+      else
+      {
+        // Multi-day event.
+        $month_end=ec3_get_end_date('M');
+        $day_end  =ec3_get_end_date('j');
+        $result.="<tr class='ec3_month'>"
+               .  "<td class='ec3_multi_start'>$month_start</td>"
+               .  "<td class='ec3_multi_end'>$month_end</td></tr>";
+        $result.="<tr class='ec3_day'>"
+               .  "<td class='ec3_multi_start'>$day_start</td>"
+               .  "<td class='ec3_multi_end'>$day_end</td></tr>";
+      }
+      //echo stripslashes($ec3->event->info_shed);
+      if (!empty($ec3->event->info_shed)) {
+        $bulle = stripslashes($ec3->event->info_shed);
+        $result.="<tr><td class='bulle'>$bulle</td></tr></tbody></table></div>\n";
+      }
+      else{
+        $result.="</tbody></table></div>\n";
+      }
+    }
+    else{
+      $result.="";
+    }
+  }
+  return apply_filters( 'ec3_filter_iconlets_active', $result );
 }
 
 

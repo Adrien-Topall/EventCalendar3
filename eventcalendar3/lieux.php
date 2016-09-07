@@ -9,6 +9,24 @@ function cree_page_lieux_content(){
 	$table_opt = $wpdb->prefix . 'ec3_add_opt';
 	$url = admin_url();
 
+	// En cas de besoin pour faire des moulinette 
+	if (isset($_GET['updateBdd'])) {
+
+		
+
+		// réinport des options dans schedule
+		/*$status = $wpdb->get_results("SELECT * FROM $table_opt");
+	    foreach ($status as $key => $value) {
+
+	    	$wpdb->update( $table_schedule, array( 'option_id' => $value->option_id ), array( 'status' => $value->nom ) );
+	    	$wpdb->show_errors();
+	    	$wpdb->print_error();
+	    	print_r($wpdb->last_error);
+	    	print_r($wpdb->last_result);
+	    	echo $wpdb->last_query;
+	    }*/
+	}
+
 	 // enregistre un nouveau lieux envoyer par le formulaire
     if ( isset($_POST['submit_lieu']) && !isset($_POST['edit']) ){
 
@@ -33,6 +51,9 @@ function cree_page_lieux_content(){
     }
 
 	?><h2>Lieux <a href="/wp-admin/admin.php?page=lieux&action=new" class="add-new-h2">ajouter</a>
+	<!-- En cas de besoin pour faire des moulinette -->
+	
+	<!-- <a href="/wp-admin/admin.php?page=lieux&updateBdd=true"><h2>Update</h2></a> -->
 	<?php
 	if (!empty($_REQUEST["action"])) {
 		if ($_REQUEST["action"] == 'new' || $_REQUEST["action"] == 'modif') {
@@ -71,6 +92,7 @@ function cree_page_lieux_content(){
 				  else{ 
 						?><h2>Ajouter un lieu</h2><?php
 				  } ?>
+				  
 			      
 
 			      <form action="<?php echo $url; ?>?page=lieux" method="post">
@@ -194,7 +216,8 @@ function cree_page_lieux_content(){
 			    		
 			    	?></tr><?php
 			    }
-			    	?></tbody>
+			    	?>
+			    	</tbody>
 			    </table><?php
 	   
 	    		break;
@@ -269,7 +292,7 @@ function get_lieux($id_shed='', $post_ID=''){
 	?></select> <?php
 }
 
-function get_option_event($id_shed=''){
+function get_option_event($id_shed='', $post_ID=''){
 
 	global $ec3, $wpdb;
 
@@ -289,16 +312,31 @@ function get_option_event($id_shed=''){
 	}
 	
 
+
 	$toutes_les_options = $wpdb->get_results("SELECT * FROM $table_opt");
 
+
+
 	foreach ($toutes_les_options as $key_option) {
-		?> 
-			<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>
-          	<input class="radio_liste" type="radio" name="ec3_option_<?php echo $id_shed; ?>" value="<?php echo $key_option->option_id; ?>" 
-				<?php if ($option_default->option_id == $key_option->option_id) {
-						?> checked="checked" <?php
-					} ?> >
-		<?php
+
+		if ( get_post_type() == 'exposition' && $key_option->post_type_expo == 'true') {
+			?> 
+				<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>
+	          	<input class="radio_liste" type="radio" name="ec3_option_<?php echo $id_shed; ?>" value="<?php echo $key_option->option_id; ?>" 
+					<?php if ($option_default->option_id == $key_option->option_id) {
+							?> checked="checked" <?php
+						} ?> >
+			<?php
+		}
+		elseif ( get_post_type() != 'exposition' && $key_option->post_type_expo == false) {
+			?> 
+				<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>
+	          	<input class="radio_liste" type="radio" name="ec3_option_<?php echo $id_shed; ?>" value="<?php echo $key_option->option_id; ?>" 
+					<?php if ($option_default->option_id == $key_option->option_id) {
+							?> checked="checked" <?php
+						} ?> >
+			<?php
+		}
 	}
 }
 

@@ -185,7 +185,7 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
       );
     $result =  '<table id="'.$this->id.'-'.$this->dateobj->month_id().'">'."\n"
       . '<caption>'
-      . '<a href="' . $this->dateobj->month_link($this->show_only_events) .'&ec3_listing=all'
+      . '<a href="' . $this->dateobj->month_link($this->show_only_events)
       . '" title="' . $title . '">'
       . $this->dateobj->month_name() . ' ' . $this->dateobj->year_num . "</a>"
       . "</caption>\n"
@@ -301,8 +301,8 @@ class ec3_SidebarCalendar extends ec3_BasicCalendar
     $q = 'ec3_after='  .$this->begin_dateobj->to_mysqldate()
        . '&ec3_before='.$this->limit_dateobj->to_mysqldate()
        . '&nopaging=1';
-    if(!$this->show_only_events)
-        $q .= '&ec3_listing=all';
+    /*if(!$this->show_only_events)
+        $q .= '&ec3_listing=all';*/
     $query = new WP_Query();
     $query->query($q);
 

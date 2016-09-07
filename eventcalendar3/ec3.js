@@ -255,14 +255,14 @@ ec3.Calendar.prototype = {
         //var url=ec3.home+'/?feed=ec3xml&year='+year_num+'&monthnum='+month_num;
 	  if(month_num<10) 
 	  {
-	    c.href=ec3.home+'/?m='+year_num+'0'+month_num+'&ec3_listing=all';
+	    c.href=ec3.home+'/?m='+year_num+'0'+month_num;
 	  }
 	  else
 	  {
-	    c.href=ec3.home+'/?m='+year_num+month_num+'&ec3_listing=all';
+	    c.href=ec3.home+'/?m='+year_num+month_num;
 	  }
-          if(this.is_listing)
-             c.href+='&ec3_listing=events';
+          /*if(this.is_listing)
+             c.href+='&ec3_listing=events';*/
           c.title=ec3.viewpostsfor;
           c.title=c.title.replace(/%1\$s/,ec3.month_of_year[month_num0]);
           c.title=c.title.replace(/%2\$s/,year_num);
@@ -371,8 +371,8 @@ ec3.Calendar.prototype = {
     			var url=ec3.home+'/?feed=ec3xml&m='+year_num+month_num;
           //var url=ec3+'wp-content/plugins/my-plugin/ajax_calendar.php?feed=ec3xml&m='+year_num+month_num;
 		    }
-        if(this.is_listing)
-           url+='&ec3_listing=events';
+        /*if(this.is_listing)
+           url+='&ec3_listing=events';*/
         //console.log(this.is_listing); 
         req.open("GET",url,true);
         this.set_spinner(1);

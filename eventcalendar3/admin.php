@@ -139,15 +139,13 @@ class ec3_Admin
       $schedule = $wpdb->get_results(
         "SELECT
            sched_id,
-           DATE_FORMAT(start,'%Y-%m-%d') AS start,
-           DATE_FORMAT(end,'%Y-%m-%d') AS end,
-           time_start,
-           time_end,
+           start,
+           end,
            allday,
            lieux_id,
            option_id,
            rpt,
-           info_shed
+           infos
          FROM $ec3->schedule WHERE post_id=$post_ID ORDER BY start");
     else
       $schedule = false;
@@ -163,8 +161,10 @@ class ec3_Admin
     <table cellspacing="2" cellpadding="5" class="editform" style="position : relative;">
      <thead><tr>
       <th><?php _e('Start','ec3'); ?> / <?php _e('End','ec3'); ?></th>
-      <th><?php _e('Time Start','ec3'); ?> / <?php _e('End','ec3'); ?></th>
-      <th style="text-align:center"><?php _e('All Day','ec3'); ?></th>
+      <?php if ( get_post_type() != 'exposition' ) { ?>
+          <th><?php _e('Time Start','ec3'); ?> / <?php _e('End','ec3'); ?></th>
+          <th style="text-align:center"><?php _e('All Day','ec3'); ?></th>
+       <?php } ?>
       <th style="text-align:center"><?php _e('Lieux','ec3'); ?></th>
       <th><?php _e('Options','ec3'); ?></th>
       <th><?php _e('Info','ec3'); ?></th>
@@ -179,10 +179,13 @@ class ec3_Admin
   echo 'function ec3_hide_oldrows(){ for (var i=0; i<ec3_oldrows.length; i++) ec3_oldrows[i].style.display = "none"; }';
   echo '</script>';
         foreach($schedule as $s){
-            $time_start = substr($s->time_start, 0, 5);
-            $time_end = substr($s->time_end, 0, 5);
+            $time_start = substr($s->start, 11, 16);
+            $time_end = substr($s->end, 11, 16);
+            $s->start = substr($s->start, 0, 10);
+            $s->end = substr($s->end, 0, 10);
+
             $this->schedule_row(
-              $s->start,$s->end,$time_start,$time_end,$s->sched_id,'update',$s->allday,$s->lieux_id,$s->option_id,$s->info_shed
+              $s->start,$s->end,$time_start,$time_end,$s->sched_id,'update',$s->allday,$s->lieux_id,$s->option_id,$s->infos
             );
           }
         $ec3_rows=count($schedule);
@@ -205,9 +208,11 @@ class ec3_Admin
             <span style="max-width:160px; display:inline-block;">
               <?php get_lieux('def',$post_ID); ?>
             </span>
-            <label for="horraireDefault">Horraire par défault</label>:
-            <label for="debut">debut :</label><input class="hD" name="ec3_hDebut" type="text" size="3" maxlength="5" disabled="disabled" placeholder="00:00">
-            <label for="fin">fin :</label><input type="text" size="3" maxlength="5" disabled="disabled" placeholder="00:00">
+            <?php if ( get_post_type() != 'exposition' ) { ?>
+              <label for="horraireDefault">Horraire par défault</label>:
+              <label for="debut">debut :</label><input class="hD" name="ec3_hDebut" type="text" size="3" maxlength="5" disabled="disabled" placeholder="00:00">
+              <label for="fin">fin :</label><input type="text" size="3" maxlength="5" disabled="disabled" placeholder="00:00">
+            <?php } ?>
           </div>
 
       <span style="vertical-align:middle;">&nbsp;&nbsp;<input type="checkbox" name="ec3_repeat_check" id="ec3_repeat_check" value="yes" onclick="if (this.checked && document.getElementById('ec3_repeatuntil_check').checked) document.getElementById('ec3_repeatuntil_check').click(); document.getElementById('ec3_repeat_type').disabled = !this.checked; document.getElementById('ec3_repeat_count').disabled = !this.checked;" /></span>
@@ -268,21 +273,25 @@ class ec3_Admin
          ?>" value="<?php echo $end; ?>" />
         <button type="reset" id="trigger_<?php echo $e; ?>">&hellip;</button>
        </td>
-       <td>
-        <!-- Time Start -->
-        <input type="text" name="<?php echo $ts;
-         if('update'==$action){ echo "\" id=\"$ts"; }
-         ?>" value="<?php echo $time_start; ?>" />
-        </br>
-        <!-- Time Start -->
-        <input type="text" name="<?php echo $te;
-         if('update'==$action){ echo "\" id=\"$te"; }
-         ?>" value="<?php echo $time_end; ?>" />
-       </td>
-       <td style="text-align:center">
-        <input type="checkbox" name="ec3_allday_<?php echo $sid;
-         ?>" value="1"<?php if($allday){ echo ' checked="checked"'; } ?> />
-       </td>
+
+       <?php if ( get_post_type() != 'exposition' ) { ?>
+         <td>
+          <!-- Time Start -->
+          <input type="text" name="<?php echo $ts;
+           if('update'==$action){ echo "\" id=\"$ts"; }
+           ?>" value="<?php echo $time_start; ?>" />
+          </br>
+          <!-- Time End -->
+          <input type="text" name="<?php echo $te;
+           if('update'==$action){ echo "\" id=\"$te"; }
+           ?>" value="<?php echo $time_end; ?>" />
+         </td>
+         <td style="text-align:center">
+          <input type="checkbox" name="ec3_allday_<?php echo $sid;
+           ?>" value="1"<?php if($allday){ echo ' checked="checked"'; } ?> />
+         </td>
+       <?php } ?>
+
        <td style="max-width : 200px;">
          <?php get_lieux($sid,$post_ID); ?>
        </td>
@@ -396,7 +405,7 @@ class ec3_Admin
             $vals[$k]= "'".$v.":00'";
           }
           else{
-              $vals[$k]="'".$wpdb->escape($v)."'";
+              $vals[$k]="'".$wpdb->prepare($v)."'";
           }
       $sid_ok=$wpdb->get_var("$count_where post_id=$post_ID AND sched_id=$sid");
       // Execute the SQL.
@@ -412,15 +421,17 @@ class ec3_Admin
           $val_lieu = $_POST['ec3_def_lieux'];
         }
         $val_option = $vals['option'];
-        $val_start = $vals['start'];
-        $val_end = $vals['end'];
-        $val_Tstart = $vals['timeStart'];
-        $val_Tend = $vals['timeEnd'];
+        $val_start = $vals['start'].' '.$vals['timeStart'];
+        $val_end = $vals['end'].' '.$vals['timeEnd'];
         $val_allday = $vals['allday'];
         $val_rpt = $vals['rpt'];
         $val_info = $vals['info'];
         //$sync = '0';
-        $wpdb->update( $ec3->schedule, array( 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'info_shed' => $val_info ), array( 'sched_id' => $sid, 'post_id' => $post_ID ) );
+        if ( get_post_type($post_ID) == 'exposition' ) { 
+          $val_allday = 1;
+        }
+
+        $wpdb->update( $ec3->schedule, array( 'start' => $val_start, 'end' => $val_end, 'allday' => $val_allday, 'rpt' => $val_rpt, 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'infos' => $val_info ), array( 'sched_id' => $sid, 'post_id' => $post_ID ) );
 
         $wpdb->query(
          "UPDATE $ec3->schedule
@@ -438,15 +449,16 @@ class ec3_Admin
           $val_option = '';
         }
         else{ $val_option = $vals['option']; }
-        $val_start = $vals['start'];
-        $val_end = $vals['end'];
-        $val_Tstart = $vals['timeStart'];
-        $val_Tend = $vals['timeEnd'];
+        $val_start = $vals['start'].' '.$vals['timeStart'];
+        $val_end = $vals['end'].' '.$vals['timeEnd'];
         $val_allday = $vals['allday'];
         $val_rpt = $vals['rpt'];
         $val_info = $vals['info'];
+        if ( get_post_type($post_ID) == 'exposition' ) { 
+          $val_allday = 1;
+        }
 
-        $wpdb->insert( $ec3->schedule, array( 'post_id' => $post_ID, 'start' => $val_start, 'end' => $val_end, 'time_start' => $val_Tstart, 'time_end' => $val_Tend, 'allday' => $val_allday, 'rpt' => $val_rpt, 'sequence' => '1', 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'event_uid' => '0', 'info_shed' => $val_info) );
+        $wpdb->insert( $ec3->schedule, array( 'post_id' => $post_ID, 'start' => $val_start, 'end' => $val_end, 'allday' => $val_allday, 'rpt' => $val_rpt, 'sequence' => '1', 'lieux_id' => $val_lieu, 'option_id' => $val_option, 'sync' => '0', 'event_uid' => '0', 'infos' => $val_info) );
 
       endif;
     }
@@ -600,7 +612,7 @@ class ec3_Admin
         'ec3_schedule_editor',   // HTML id for container div
          __('Event Editor','ec3'),
         'ec3_event_editor_box',  // callback function
-        'post',
+        array('post','exposition'),
         'normal',              // context
         'high'                   // priority
       );
@@ -675,9 +687,10 @@ class ec3_Admin
           $sid=intval($match[1]);
           $nom_option = $_POST['nom_option_new_'.$sid];
           $message_option = $_POST['message_option_new_'.$sid];
+          $expo_option = $_POST['expo_option_new_'.$sid];
 
-          if ( !empty($nom_option) && !empty($message_option) ) {
-            $wpdb->insert( $table_opt, array( 'nom' => $nom_option, 'message' => $message_option ), array( '%s', '%s' ) );
+          if ( !empty($nom_option) ) {
+            $wpdb->insert( $table_opt, array( 'nom' => $nom_option, 'message' => $message_option, 'post_type_expo' => $expo_option ), array( '%s', '%s', '%s' ) );
           }
           else{
 
@@ -689,9 +702,10 @@ class ec3_Admin
           $sid=intval($match[1]);
           $nom_option = $_POST['nom_option_modif_'.$sid];
           $message_option = $_POST['message_option_modif_'.$sid];
+          $expo_option = $_POST['expo_option_modif_'.$sid];
 
-          if ( !empty($nom_option) && !empty($message_option) ) {
-            $wpdb->update( $table_opt, array( 'nom' => $nom_option, 'message' => $message_option ), array( 'option_id' => $sid ), array( '%s', '%s' ) );
+          if ( !empty($nom_option) ) {
+            $wpdb->update( $table_opt, array( 'nom' => $nom_option, 'message' => $message_option, 'post_type_expo' => $expo_option ), array( 'option_id' => $sid ), array( '%s', '%s', '%s' ) );
           }
         }
         if( preg_match('/^nom_option_delete_([0-9]+)$/',$k,$match) )
@@ -809,6 +823,10 @@ class ec3_Admin
 
                 <label for="message_option_modif_<?php echo $value->option_id; ?>" >Message :</label>
                 <textarea name="message_option_modif_<?php echo $value->option_id; ?>" id="message_option_modif_<?php echo $value->option_id; ?>" cols="40" rows="1" ><?php echo $value->message; ?></textarea>
+                
+                <label for="expo_option_modif_<?php echo $value->option_id; ?>">Pour les expo uniquement:</label>
+                <input type="checkbox" name="expo_option_modif_<?php echo $value->option_id; ?>" id="expo_option_modif_<?php echo $value->option_id; ?>" value="true" <?php if ( $value->post_type_expo == 'true' ) { echo 'checked="checked"'; } ?> >
+
                 <button class="del" >-</button>
             </td>
          <?php } ?>
@@ -854,7 +872,15 @@ class ec3_Admin
           $('#new_block').click(function(e){
               e.preventDefault();
               nbr++;
-              $(' <td class="row_option"><label for="nom_option_new_'+nbr+'">Nom : </label><input type="text" name="nom_option_new_'+nbr+'" id="nom_option_new_'+nbr+'" ><label for="message_option_new_'+nbr+'" > Message : </label><textarea name="message_option_new_'+nbr+'" id="message_option_new_'+nbr+'" cols="40" rows="1"></textarea><button class="del" > -</button></td>').insertBefore('#new_block');
+              $('<td class="row_option">'+
+                  '<label for="nom_option_new_'+nbr+'">Nom : </label>'+
+                  '<input type="text" name="nom_option_new_'+nbr+'" id="nom_option_new_'+nbr+'" >'+
+                  '<label for="message_option_new_'+nbr+'" > Message : </label>'+
+                  '<textarea name="message_option_new_'+nbr+'" id="message_option_new_'+nbr+'" cols="40" rows="1"></textarea>'+
+                  '<label for="expo_option_new_'+nbr+'">Pour les expo :</label>'+
+                  '<input type="checkbox" name="expo_option_new_'+nbr+'" id="expo_option_new_'+nbr+'" value="true">'+
+                  '<button class="del" > -</button>'+
+                '</td>').insertBefore('#new_block');
 
               $('button.del').click(function(event){
                 event.preventDefault();

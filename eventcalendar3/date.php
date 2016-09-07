@@ -199,8 +199,8 @@ class ec3_Date
 //        $daylink .= '?ec3_listing=events';
 //    } else {
       $daylink=apply_filters('day_link', get_option('home') . '/?m=' . $year . zeroise($month, 2) . zeroise($day, 2), $year, $month, $day);
-      if($show_only_events)
-        $daylink .= '&amp;ec3_listing=events';
+      /*if($show_only_events)
+        $daylink .= '&amp;ec3_listing=events';*/
 //    }
     return $daylink;
   }
@@ -235,8 +235,8 @@ class ec3_Date
 //        $monthlink .= '?ec3_listing=events';
 //    } else {
       $monthlink = apply_filters('month_link', get_option('home') . '/?m=' . $year . zeroise($month, 2), $year, $month);
-      if($show_only_events)
-        $monthlink .= '&amp;ec3_listing=events';
+      /*if($show_only_events)
+        $monthlink .= '&amp;ec3_listing=events';*/
 //    }
     return $monthlink;
   }

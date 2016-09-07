@@ -135,6 +135,65 @@ function oa_createLocation($accessToken, $id_lieux){
   
 }
 
+/*************************************************************************
+*             Création d'un lieux pour Fete de la science
+**************************************************************************/
+function oa_createLocationFS($accessToken, $adresse, $nom_lieux){
+  global $wpdb;
+  $randomnumber = rand(100000, 999999);
+  
+    $adresse = wp_strip_all_tags( $adresse );
+
+    // 1 . je construit une fonction pour récup' les coords
+    function get_coords($a){
+      // je construit une URL avec l'adresse
+      $map_url = 'http://maps.google.com/maps/api/geocode/json?address=' . urlencode( $a ) . '&sensor=false';
+      // je récupère ça
+      $request = wp_remote_get( $map_url );
+      $json = wp_remote_retrieve_body( $request );
+      // si c'est vide, je kill...
+      if( empty( $json ) )
+      return false;
+      // je parse et je choppe la latitude et la longitude
+      $json = json_decode( $json );
+      $lat = $json->results[ 0 ]->geometry->location->lat;
+      $long = $json->results[ 0 ]->geometry->location->lng;
+      // je retourne les valeurs sous forme de tableau
+      return compact( 'lat', 'long' );
+    }
+    // 2. je lance ma fonction, l'adresse en parametre
+    $coords = get_coords( $adresse );
+    // 3. si j'ai récupéré des coordonnées, je sauvegarde
+    if( $coords != '' ){
+      $latitude = $coords['lat'];
+      $longitude = $coords['long'];
+    }
+
+  $ch_lieux = curl_init("https://api.openagenda.com/v1/locations");
+
+  //curl_setopt($ch_lieux, CURLOPT_CUSTOMREQUEST, 'PUT');
+  curl_setopt( $ch_lieux, CURLOPT_POST, true );
+  curl_setopt($ch_lieux, CURLOPT_POSTFIELDS, array(
+    'access_token' => $accessToken,
+    'nonce' => $randomnumber,
+    'data' => json_encode(array(
+      'placename' => $nom_lieux,
+      'address' => $adresse,
+      'latitude' => $latitude,
+      'longitude' => $longitude
+    ))
+  ));
+  curl_setopt($ch_lieux, CURLOPT_RETURNTRANSFER, TRUE);
+  $received_content = curl_exec($ch_lieux);
+
+  if (curl_getinfo($ch_lieux, CURLINFO_HTTP_CODE) == 200)
+  {
+    $data2 = json_decode($received_content, true);
+    $location_uid = $data2['uid'];
+  }
+  return $location_uid;
+}
+
 
 /*************************************************************************
 *             Recupere info agenda à partir du slug Name

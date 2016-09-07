@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Event Calendar Plus
-Version: 3.2.beta4
+Version: 3.4.1
 Plugin URI: http://wpcal.firetree.net
 Description: Manage future events as an online calendar. Display upcoming events in a dynamic calendar, on a listings page, or as a list in the sidebar. You can subscribe to the calendar from iCal (OSX) or Sunbird. Change settings on the <a href="options-general.php?page=ec3_admin">Event Calendar Options</a> screen.
 Author: Alex Tingle, modifié par Adrien Topall
@@ -26,13 +26,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+
 function create_plugin_database_table() {
   global $wpdb;
 
   // Check version - return if no upgrade required.
   $installed_version=get_option('ec3_version');
   $v0 = new ec3_Version($installed_version);
-  $v1 = new ec3_Version('3.4');
+  $v1 = new ec3_Version('3.4.1');
+  $miseAJour = 'ok';
 
   if( $v0->cmp($v1) < 0 ){
 
@@ -40,7 +42,6 @@ function create_plugin_database_table() {
     $table_lieux = $wpdb->prefix . 'ec3_lieux';
     $table_opt = $wpdb->prefix . 'ec3_add_opt';
     $table_geo = $wpdb->prefix . 'geopress';
-    $table_teste = $wpdb->prefix . 'ec3_teste';
     $table_meta = $wpdb->prefix . 'postmeta';
     $table_oa_event = $wpdb->prefix . 'ec3_oa_event';
     $table_oa_agenda = $wpdb->prefix . 'ec3_oa_agenda';
@@ -61,47 +62,76 @@ function create_plugin_database_table() {
     }
       
       $sql1 = "CREATE TABLE $table_lieux (
-               lieux_id     INT(10) AUTO_INCREMENT,
-               departement  VARCHAR(3),
-               nom_ville    VARCHAR(85),
-               nom_lieux    VARCHAR(255),
-               adresse      VARCHAR(255),
-               longitude    FLOAT(18,14),
-               latitude     FLOAT(18,14),
-               lieux_uid    BIGINT(20),
-               PRIMARY KEY(lieux_id)
-             )";
+                 lieux_id     INT(10) AUTO_INCREMENT,
+                 departement  VARCHAR(3),
+                 nom_ville    VARCHAR(85),
+                 nom_lieux    VARCHAR(255),
+                 adresse      VARCHAR(255),
+                 longitude    FLOAT(18,14),
+                 latitude     FLOAT(18,14),
+                 lieux_uid    BIGINT(20),
+                 PRIMARY KEY(lieux_id)
+               )";
 
       $sql2 = "CREATE TABLE $table_opt (
-             option_id    INT(10) AUTO_INCREMENT,
-             nom          VARCHAR(85),
-             message      VARCHAR(255),
-             PRIMARY KEY(option_id)
-           )";
+                 option_id        INT(10) AUTO_INCREMENT,
+                 nom              VARCHAR(85),
+                 message          VARCHAR(255),
+                 post_type_expo   ENUM('true', 'false') DEFAULT 'false',
+                 PRIMARY KEY(option_id)
+               )";
 
-      $sql5 = "CREATE TABLE $table_oa_agenda (
-             agenda_uid   BIGINT(20),
-             title        VARCHAR(255),
-             slugName     VARCHAR(255),
-             PRIMARY KEY(agenda_uid)
-           )";
+      $sql3 = "CREATE TABLE $table_oa_agenda (
+                 agenda_uid   BIGINT(20),
+                 title        VARCHAR(255),
+                 slugName     VARCHAR(255),
+                 PRIMARY KEY(agenda_uid)
+               )";
+      
+      require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
+      dbDelta( $sql1 );
+      dbDelta( $sql2 );
+      dbDelta( $sql3 );
+
 
       if ($table_exists) {
-        $wpdb->query("ALTER TABLE $table_schedule ADD time_start TIME NOT NULL DEFAULT '00:00:00' AFTER `end`;");
-        $wpdb->query("ALTER TABLE $table_schedule ADD time_end TIME NOT NULL DEFAULT '00:00:00' AFTER `time_start`;");
-        $wpdb->query("ALTER TABLE $table_schedule ADD lieux_id INT(10) ");
-        $wpdb->query("ALTER TABLE $table_schedule ADD option_id INT(10) ");
-        $wpdb->query("ALTER TABLE $table_schedule ADD sync tinyint(1) DEFAULT 0 ");
-        $wpdb->query("ALTER TABLE $table_schedule ADD event_uid BIGINT(20) DEFAULT 0 ");   
+
+        // envoye des status dans la table ec3_add_opt
+        $toutes_les_options = $wpdb->get_results("SELECT DISTINCT status FROM $table_schedule");
+        foreach ($toutes_les_options as $the_option) {
+          $wpdb->insert( $ec3->table_opt, array( 'nom' => $the_option->status ) );
+        }
+
+        // ajout de colones dans la table schedule
+        /*$wpdb->query("IF COL_LENGTH('$table_schedule', 'sequence') IS NULL BEGIN (ALTER TABLE $table_schedule ADD sequence INT(10) AFTER `rpt` ) END");
+        $wpdb->query("IF COL_LENGTH('$table_schedule', 'lieux_id') IS NULL BEGIN (ALTER TABLE $table_schedule ADD lieux_id INT(10) AFTER `sequence` ) END");
+        $wpdb->query("IF COL_LENGTH('$table_schedule', 'option_id') IS NULL BEGIN (ALTER TABLE $table_schedule ADD option_id INT(10) AFTER `lieux_id` ) END");
+        $wpdb->query("IF COL_LENGTH('$table_schedule', 'sync') IS NULL BEGIN (ALTER TABLE $table_schedule ADD sync INT(10) AFTER `option_id` ) END");
+        $wpdb->query("IF COL_LENGTH('$table_schedule', 'event_uid') IS NULL BEGIN (ALTER TABLE $table_schedule ADD event_uid INT(10) AFTER `sync` ) END");
+        */
+        $wpdb->query("ALTER TABLE $table_schedule ADD lieux_id INT(10) AFTER `sequence` ");
+        $wpdb->query("ALTER TABLE $table_schedule ADD option_id INT(10) AFTER `lieux_id` ");
+        $wpdb->query("ALTER TABLE $table_schedule ADD sync tinyint(1) DEFAULT 0 AFTER `option_id` ");
+        $wpdb->query("ALTER TABLE $table_schedule ADD event_uid BIGINT(20) DEFAULT 0 AFTER `sync` ");
+
+        // réinport des options dans schedule
+        $status = $wpdb->get_results("SELECT * FROM $table_opt");
+        foreach ($status as $key => $value) {
+          $wpdb->update( $table_schedule, array( 'option_id' => $value->option_id ), array( 'status' => $value->nom ) );
+        }
+
+        // supression de la colone status
+        //$wpdb->query("IF COL_LENGTH('$table_schedule', 'status') IS NOT NULL BEGIN ( ALTER TABLE $table_schedule DROP COLUMN status ) END");
+        $wpdb->query("ALTER TABLE $table_schedule DROP COLUMN status");
+
       }
       else{
-        $sql3 = "CREATE TABLE $table_schedule (
+        $sql5 = "CREATE TABLE $table_schedule (
                sched_id     BIGINT(20) AUTO_INCREMENT,
                post_id      BIGINT(20),
                start        DATETIME,
                end          DATETIME,
-               time_start   TIME NOT NULL DEFAULT '00:00:00',
-               time_end     TIME NOT NULL DEFAULT '00:00:00',
                allday       BOOL,
                rpt          VARCHAR(64),
                sequence     BIGINT(20),
@@ -109,23 +139,21 @@ function create_plugin_database_table() {
                option_id    INT(10),
                sync         tinyint(1) DEFAULT 0,
                event_uid    BIGINT(20) DEFAULT 0,
-               info_shed    VARCHAR(200),
+               infos        TEXT,
                PRIMARY KEY(sched_id),
                FOREIGN KEY (lieux_id) REFERENCES $table_lieux(lieux_id),
                FOREIGN KEY (option_id) REFERENCES $table_opt(option_id)
              )";
       }
 
-      require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-      dbDelta( $sql1 );
-      dbDelta( $sql2 );
-      dbDelta( $sql3 );
-      dbDelta( $sql4 );
-      dbDelta( $sql5 );
+      if ( isset( $sql5) ) {
+         dbDelta( $sql5 );
+      } 
+      
 
       // Remise à zero des options.
-      $wpdb->query('DELETE FROM '.$table_opt.'');
-      $wpdb->insert( $table_opt, array('option_id' => 1, 'nom' => 'RAS', 'message' => 'Rien à signaler' ), array( '%s', '%s' ) );
+      /*$wpdb->query('DELETE FROM '.$table_opt.'');
+      $wpdb->insert( $table_opt, array('option_id' => 1, 'nom' => 'RAS', 'message' => 'Rien à signaler' ), array( '%s', '%s' ) );*/
 
       // Update de la time zone.
       $time_zone = $wpdb->get_row('SELECT * FROM '.$wpdb->prefix.'options WHERE option_name = "ec3_tz" LIMITE 1');
@@ -163,11 +191,11 @@ function create_plugin_database_table() {
         }
       }
   }
-  if ($installed_version== '3.4') {
-    $table_schedule = $wpdb->prefix . 'ec3_schedule';
-    $wpdb->query("ALTER TABLE $table_schedule ADD info_shed VARCHAR(200) ");
+  if ($installed_version == '3.4') {
+
+
   }
-  if($installed_version== '3.4.1'){
+  if($installed_version == '3.4.1'){
     return;
   }
   if ($v0->cmp($v1) > 0) {
@@ -383,6 +411,9 @@ function ec3_filter_posts_where($where)
        $ec3->order_by_start=true;
        $ec3->join_ec3_sch=true;
      endif;
+
+    $ec3->order_by_start=true;
+    $ec3->join_ec3_sch=true;
 
   elseif($ec3->is_date_range):
 
@@ -756,8 +787,8 @@ function ec3_get_the_excerpt($text)
 
 //
 // Hook in...
-if($ec3->event_category)
-{
+//if($ec3->event_category)
+//{
   add_action('init',              'ec3_action_init');
   add_action('wp_head',           'ec3_action_wp_head',13);
   add_action('admin_head',        'ec3_action_admin_head');
@@ -786,7 +817,7 @@ if($ec3->event_category)
     add_filter('getarchives_join', 'ec3_filter_getarchives_join');
     add_filter('getarchives_where','ec3_filter_getarchives_where');
   }
-}
+//}
 /*************************************************************************
 * Création d'une page de gestion des lieux
 *************************************************************************/
@@ -848,6 +879,20 @@ function creation_type_ec3(){
   register_post_type('event',$args);
 }
 add_action('init','creation_type_ec3');*/
+
+/******************************************************************************
+// fonction qui donne tableau d'object de toute les dates lier à un post(ID)
+*******************************************************************************/
+function get_date_postID( $id ){
+  global $ec3, $wpdb;
+  $table_schedule = $wpdb->prefix . 'ec3_schedule';
+
+
+  $resultat = $wpdb->get_results("SELECT * FROM $table_schedule WHERE post_id = $id");
+  
+  return $resultat;
+}
+
 
 /************************************************************************
 // Requetes ajax
@@ -1200,9 +1245,15 @@ add_action('manage_posts_custom_column',  'my_show_columns');
              $reponse = get_post_meta( $mypost, 'syncOrNot' );
              $envoie = '<p>Ajouter ou supprimer les evenements du post à Open Agenda<p>';
              
-             if ($reponse[0] == 1 && isset($reponse)) {
-               // post synchonisé
-               $envoie = $envoie.'<div title="'.$mypost.'" class="toggle toggle-on" id="switch">';
+             if (isset($reponse) && !empty($reponse)) {
+               if ($reponse[0] == 1) {
+                 // post synchonisé
+                 $envoie = $envoie.'<div title="'.$mypost.'" class="toggle toggle-on" id="switch">';
+               }
+               else{
+                // post non synchonisé
+                $envoie = $envoie.'<div title="'.$mypost.'" class="toggle" id="switch">';
+               }
              }
              else{
               // post non synchonisé
