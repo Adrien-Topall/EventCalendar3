@@ -321,7 +321,7 @@ function get_option_event($id_shed='', $post_ID=''){
 
 		if ( get_post_type() == 'exposition' && $key_option->post_type_expo == 'true') {
 			?> 
-				<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>
+				<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>&nbsp;
 	          	<input class="radio_liste" type="radio" name="ec3_option_<?php echo $id_shed; ?>" value="<?php echo $key_option->option_id; ?>" 
 					<?php if ($option_default->option_id == $key_option->option_id) {
 							?> checked="checked" <?php
@@ -330,7 +330,7 @@ function get_option_event($id_shed='', $post_ID=''){
 		}
 		elseif ( get_post_type() != 'exposition' && $key_option->post_type_expo == false) {
 			?> 
-				<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>
+				<label class="radio_liste" for="ec3_option_<?php echo $id_shed; ?>"><?php echo $key_option->nom; ?></label>&nbsp;
 	          	<input class="radio_liste" type="radio" name="ec3_option_<?php echo $id_shed; ?>" value="<?php echo $key_option->option_id; ?>" 
 					<?php if ($option_default->option_id == $key_option->option_id) {
 							?> checked="checked" <?php

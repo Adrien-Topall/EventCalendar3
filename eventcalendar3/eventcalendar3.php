@@ -1145,16 +1145,17 @@ function sync_post_callback() {
           } 
 
 
+
           // récuperation des events du post
-          $tous_les_events = $wpdb->get_results('SELECT sched_id, start, end, time_start, time_end, event_uid FROM '.$table_schedule.' WHERE post_id = '.$id_post.' AND lieux_id = '.$val_lieu->lieux_id.' ');
+          $tous_les_events = $wpdb->get_results('SELECT sched_id, start, end, event_uid FROM '.$table_schedule.' WHERE post_id = '.$id_post.' AND lieux_id = '.$val_lieu->lieux_id.' ');
           $date = array();
           $listeSchedIds = '';
           $eventUid = 0;
           foreach ($tous_les_events as $key => $val_date) { // création d'un tableau 2D avec toutes les dates du post.
             $start =  new DateTime( substr($val_date->start, 0, 10) );
             $end =  new DateTime( substr($val_date->end, 0, 10) );
-            $tStrat = substr($val_date->time_start, 0, 5);
-            $tEnd = substr($val_date->time_end, 0, 5);
+            $tStrat = substr($val_date->start, 11, 5);
+            $tEnd = substr($val_date->end, 11, 5);
 
             while ($start <= $end) {
               $day = array( $start->format('Y-m-d'), $tStrat, $tEnd );
@@ -1173,6 +1174,7 @@ function sync_post_callback() {
             }
             
           }
+          
           // On prepare les données pour crée l'event
           $title = substr($infoPost->post_title, 0, 138);
           $description = substr($infoPost->post_content, 0, 50);
@@ -1190,9 +1192,11 @@ function sync_post_callback() {
           else{
             // On crée l'event et récupère son Uid
             $eventUid = oa_createEvent( $accessToken, $title, $description, $freeText, '', $loc_uid->lieux_uid, $date, $imageUrl ); 
+            if( $eventUid == 'false' ){
+              echo "event non créé !";
+              wp_die();
+            }
           }
-
-
           
           // on récupère l'Uid de l'agenda
           // TODO : stocker cette info dans db_option
@@ -1202,8 +1206,12 @@ function sync_post_callback() {
             wp_die();
           }
 
-          // On passe dans la db schedule sync=1
-          $wpdb->query('UPDATE '.$table_schedule.' SET sync = 1, event_uid = '.$eventUid.'  WHERE sched_id IN ('.$listeSchedIds.') ');
+          $retourPush = oa_pushEventAgenda( $agendaUid, $eventUid, $description, $accessToken );
+          if ($retourPush != 'false' && $retourPush == 'ok') {
+            // On passe dans la db schedule sync=1
+            $wpdb->query('UPDATE '.$table_schedule.' SET sync = 1, event_uid = '.$eventUid.'  WHERE sched_id IN ('.$listeSchedIds.') ');
+            
+          }
 
         }   
 

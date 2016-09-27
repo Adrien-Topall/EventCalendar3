@@ -1259,3 +1259,16 @@ function ec3_get_lieux_active_schedule(){
   echo  $agenda_nav;
 
 }
+
+// affiche un calendrier avec les event du mois
+function ec3_big_cal(){
+
+  if( !isset($_POST['ec3_month']) && !empty($_POST['ec3_month']) ){
+    $month = date('m');
+  }
+  else{
+    $month = $_POST['ec3_month'];
+  }
+
+
+} // end ec3_big_cal
