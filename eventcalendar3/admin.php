@@ -134,7 +134,16 @@ class ec3_Admin
 
   function event_editor_box()
   {
-    global $ec3,$wp_version,$wpdb,$post_ID;
+    global $ec3,$wp_version,$wpdb,$post_ID, $current_user;
+
+    //
+    get_currentuserinfo();
+    if ( get_post_type() == 'exposition' ){
+      if ( !is_admin() && $current_user->user_email != 'antoine.vedel@emf.ccsti.eu' ) {
+        return;
+      }
+    }
+
     if(isset($post_ID))
       $schedule = $wpdb->get_results(
         "SELECT

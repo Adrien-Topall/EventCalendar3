@@ -235,3 +235,16 @@ div.calendar { position: relative; }
   color: #0f0;
 }
 
+/*****************************************************
+                       Calendar
+*****************************************************/
+div.periode .listemois span{
+  float: left;
+  width: 50%;
+  text-align: center;
+}
+
+div.periode .listemois span.prev,
+div.periode .listemois span.next{
+  width: 25%;
+}

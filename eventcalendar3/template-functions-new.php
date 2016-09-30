@@ -1261,14 +1261,112 @@ function ec3_get_lieux_active_schedule(){
 }
 
 // affiche un calendrier avec les event du mois
-function ec3_big_cal(){
+function ec3_big_cal( $postId ){
 
-  if( !isset($_POST['ec3_month']) && !empty($_POST['ec3_month']) ){
-    $month = date('m');
+  global $ec3, $wpdb;
+  $table_schedule = $wpdb->prefix . 'ec3_schedule';
+
+  if( !isset($_GET['ec3_month']) || empty($_GET['ec3_month']) ){
+    $month = date('n');
   }
   else{
-    $month = $_POST['ec3_month'];
+    $month = $_GET['ec3_month'];
   }
+
+  $yyyy = date( 'Y' );
+  $name_month = date( 'F' , strtotime( $yyyy.'-'.$month.'-01' ) );
+  $nb_jours = date( 't' , strtotime( $yyyy.'-'.$month.'-01' ) );
+
+  $begin = $yyyy.'-'.$month.'-01';
+  $endMonth = $yyyy.'-'.$month.'-31';
+
+  $toutes_les_dates = $wpdb->get_results('SELECT start, end FROM '.$table_schedule.' WHERE post_id = '.$postId.' AND end > "'.$begin.'"  ');
+
+  //$wpdb->show_errors(); 
+  //$wpdb->print_error(); 
+  $dates = array();
+  foreach ($toutes_les_dates as $key => $val_date) {
+    $start =  new DateTime( substr($val_date->start, 0, 10) );
+    $end =  new DateTime( substr($val_date->end, 0, 10) );
+
+    while ($start <= $end) {
+      $day = $start->format('Y-m-d');
+      if( !in_array($day, $dates) ){
+        array_push($dates, $day);
+      }
+      $start->modify('+1 day');
+    }
+  } 
+  ?>
+  <div class="periode">
+    
+    <div class="listemois"> 
+        
+      <span class="prev"> < prev </span>
+      <span class="nomMois"><?php echo $name_month; ?></span>
+      <span class="next"> next > </span>
+
+    </div>
+    <?php for ($i=1; $i <= 6; $i++) { ?> <!-- for 6 month -->
+     
+      <?php if ( $month > 12 ) {
+        $month = 1;
+        $yyyy++;
+      } ?>
+    
+      <div class="mois" id="mois_<?php echo $month; ?>"> 
+          <table>
+            <thead>
+              <tr>
+                  <th>Lundi</th>
+                  <th>Mardi</th>
+                  <th>Mercredi</th>
+                  <th>Jeudi</th>
+                  <th>Vendredi</th>
+                  <th>Samedi</th>
+                  <th>Dimanche</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <?php
+                $premier_jour_du_mois = date( 'N' , strtotime( $yyyy.'-'.$month.'-01' ) );
+                $dernier_jour_du_mois = date( 'N' , strtotime( $yyyy.'-'.$month.'-'.$nb_jours ) );
+
+                for($j = 1; $j <= $nb_jours; $j++ ) { ?>
+
+                  <?php $jour_de_la_semaine = date( 'N' , strtotime( $yyyy.'-'.$month.'-'.$j ) ); ?>
+                  <?php $the_day = date( 'Y-m-d' , strtotime( $yyyy.'-'.$month.'-'.$j ) ); ?>
+
+                  <?php if($j == 1 && $premier_jour_du_mois != 1) { ?>
+                    <td colspan="<?php echo $premier_jour_du_mois-1; ?>" class="casevide"></td>
+                  <?php } ?>
+                  <td
+                    <?php 
+                        if ( in_array($the_day, $dates) ) {
+                          echo 'class="notDispo"';
+                        }
+                    ?>
+                  > <!-- fin du td -->
+                    <?php echo $j; ?>
+                  </td>
+                  <?php if ($jour_de_la_semaine == 7) { ?>
+                    </tr><tr>
+                  <?php } ?>
+                <?php } ?>
+                <?php if($dernier_jour_du_mois != 7) { ?>
+                    <td colspan="<?php echo 7-$dernier_jour_du_mois; ?>" class="casevide"></td>
+                <?php } ?>
+              </tr>
+            </tbody>
+          </table>
+          
+        </div>
+        <?php $month++; ?>
+      <?php } ?> <!-- end for -->
+  </div>
+  <?php
 
 
 } // end ec3_big_cal

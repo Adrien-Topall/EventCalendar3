@@ -367,3 +367,35 @@ td.ec3_eventday a.ec3_daynum:hover { color:white; background-color:#a00 }
 #wp-calendar tbody tr td:hover span{
   display: block;
 }
+
+/*****************************************************
+                       Calendar
+*****************************************************/
+div.periode{
+  border: 1px solid rgb(200, 200, 200);
+  margin-bottom: 4%;
+  /*position: relative;*/
+}
+
+/*div.periode .mois{
+  position: relative;
+}*/
+
+div.periode .listemois span{
+  float: left;
+  width: 50%;
+  text-align: center;
+  border-bottom: 1px solid rgb(200, 200, 200);
+}
+
+div.periode span.prev,
+div.periode span.next{
+  width: 25%;
+  cursor: pointer;
+  color:#0066cc;
+}
+
+div.periode td.notDispo{
+  background-color: rgba(245, 20, 20, 0.80);
+  color: white;
+}
