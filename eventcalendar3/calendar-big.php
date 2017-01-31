@@ -97,17 +97,17 @@ class ec3_BigCalendar extends ec3_SidebarCalendar
     global $ec3;
     $result = parent::generate();
 
-    if(empty($ec3->done_bigcal_javascript))
-    {
-      $ec3->done_bigcal_javascript=true;
+    //if(empty($ec3->done_bigcal_javascript))
+    //{
+      //$ec3->done_bigcal_javascript=true;
       $result .= "\t<script type='text/javascript' src='"
       .    $ec3->myfiles . "/calendar-big.js'></script>\n";
-    }
+    //}
     $result .=
-        "\t<script type='text/javascript'><!--\n"
+        "\t<script type='text/javascript'>\n"
       . "\t  ec3.calendars['$this->id'].new_day = ec3.big_cal.new_day;\n"
       . "\t  ec3.calendars['$this->id'].update_day = ec3.big_cal.update_day;\n"
-      . "\t--></script>\n";
+      . "\t</script>\n";
     return $result;
   }
 

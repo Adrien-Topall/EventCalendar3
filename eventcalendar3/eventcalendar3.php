@@ -887,7 +887,6 @@ function get_date_postID( $id ){
   global $ec3, $wpdb;
   $table_schedule = $wpdb->prefix . 'ec3_schedule';
 
-
   $resultat = $wpdb->get_results("SELECT * FROM $table_schedule WHERE post_id = $id");
   
   return $resultat;
@@ -1129,6 +1128,7 @@ function sync_post_callback() {
         $temp1 = preg_replace('@(wp-content/)([a-zA-Z0-9-]+[/]?)*@', 'wp-content/', $temp1);
         $imageUrl = preg_replace('@((http|https)://(w{3}\.)?)([a-zA-Z0-9.-]*[/])*([a-zA-Z0-9-]*[/])*(uploads/)@', 'uploads/', $imageUrl);     
         $imageUrl = $temp1.$imageUrl;
+        //$imageUrl = '@'.$imageUrl;
       }
 
         //echo $value->post_id;
@@ -1176,9 +1176,9 @@ function sync_post_callback() {
           }
           
           // On prepare les données pour crée l'event
-          $title = substr($infoPost->post_title, 0, 138);
-          $description = substr($infoPost->post_content, 0, 50);
-          $freeText = substr($infoPost->post_content, 0, 5800);
+          $title = substr( wp_strip_all_tags( $infoPost->post_title ), 0, 138);
+          $description = substr( wp_strip_all_tags( $infoPost->post_content ), 0, 50);
+          $freeText = substr( wp_strip_all_tags( $infoPost->post_content ), 0, 5800);
 
           
           if ($eventUid != 0) {
@@ -1225,12 +1225,12 @@ function sync_post_callback() {
       }
       update_post_meta( $id_post, 'syncOrNot', $syncOrNot );
   
-    echo "syncOk";
+    echo "syncOk - " . $imageUrl;
     wp_die();
     }
 
 }
-
+//http://dev.emf.fr/wp-admin/edit.php?s=azote&post_status=all&post_type=post&action=-1&m=0&cat=0&paged=1&action2=-1
 /************************************************************
 * Action sync sur la page Articles
 *************************************************************/
@@ -1250,11 +1250,11 @@ add_action('manage_posts_custom_column',  'my_show_columns');
      $mypost = $post->ID;
      switch ($name) {
          case 'sync':
-             $reponse = get_post_meta( $mypost, 'syncOrNot' );
+             $reponse = get_post_meta( $mypost, 'syncOrNot', true );
              $envoie = '<p>Ajouter ou supprimer les evenements du post à Open Agenda<p>';
-             
+             $envoie .= '<div style="display: none;">'.$reponse.'</div>';
              if (isset($reponse) && !empty($reponse)) {
-               if ($reponse[0] == 1) {
+               if ($reponse == 1) {
                  // post synchonisé
                  $envoie = $envoie.'<div title="'.$mypost.'" class="toggle toggle-on" id="switch">';
                }

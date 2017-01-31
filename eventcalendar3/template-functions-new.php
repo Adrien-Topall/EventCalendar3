@@ -1,5 +1,12 @@
 <?php
 
+function ec3_get_infos()                                                                                                         
+ {
+   global $ec3;
+   return stripslashes($ec3->event->infos);
+}
+
+
 // latest
 
 /** Returns TRUE if the current post is an event. */
@@ -541,7 +548,7 @@ function ec3_get_events(
         $current_date=$data['DATE'];
       }
 
-      $data['TIME']  =ec3_get_start_time();
+      $data['TIME']  = ec3_get_start_time();
       $data['TITLE'] =get_the_title();
       $data['LINK']  =get_permalink();
       $data['AUTHOR']=get_the_author();
@@ -583,6 +590,7 @@ function ec3_get_schedule(
     $date_end  =ec3_get_end_date();
     $time_start=ec3_get_start_time();
     $time_end  =ec3_get_end_time();
+    $infos = ec3_get_infos();
     if($ec3->event->active)
       $active ='';
     else
@@ -593,7 +601,7 @@ function ec3_get_schedule(
       if($date_start!=$date_end)
       {
         $result.=
-          sprintf($format_range,$date_start,$date_end,__('to','ec3'),$active);
+          sprintf($format_range,$date_start,$date_end,__(' &rarr; ','ec3'),$active,$infos);
       }
       elseif($date_start!=$current)
       {
@@ -608,8 +616,9 @@ function ec3_get_schedule(
           $format_range,
           "$date_start $time_start",
           "$date_end $time_end",
-          __('to','ec3'),
-          $active
+          __(' &rarr; ','ec3'),
+          $active,
+	  $infos
         );
     }
     else
@@ -617,13 +626,13 @@ function ec3_get_schedule(
       if($date_start!=$current)
       {
         $current=$date_start;
-        $result.=sprintf($format_single,$date_start,$active);
+        $result.=sprintf($format_single,$date_start,$active,$infos);
       }
       if($time_start==$time_end)
-        $result.=sprintf($format_single,$time_start,$active);
+        $result.=sprintf($format_single,$time_start,$active,$infos);
       else
         $result.=
-          sprintf($format_range,$time_start,$time_end,__('to','ec3'),$active);
+          sprintf($format_range,$time_start,$time_end,__('à','ec3'),$active,$infos);
     }
   }
   return sprintf($format_wrapper,$result);
@@ -1303,11 +1312,11 @@ function ec3_big_cal( $postId ){
     <div class="listemois"> 
         
       <span class="prev"> < prev </span>
-      <span class="nomMois"><?php echo $name_month; ?></span>
+      <span class="nomMois"><?php echo $name_month ." ". $yyyy; ?></span>
       <span class="next"> next > </span>
 
     </div>
-    <?php for ($i=1; $i <= 6; $i++) { ?> <!-- for 6 month -->
+    <?php for ($i=1; $i <= 18; $i++) { ?> <!-- for 6 month -->
      
       <?php if ( $month > 12 ) {
         $month = 1;
@@ -1370,3 +1379,23 @@ function ec3_big_cal( $postId ){
 
 
 } // end ec3_big_cal
+
+// attention à utiliser sur des query avec uniquement des posts à date
+function trieQuery($query){
+  $trie = false;
+  while ($trie == false) {
+    $trie = true;
+    foreach ($query->posts as $key => $value) {
+      if (!empty($value->ec3_schedule[0]->start) && isset($query->posts[$key+1]->ec3_schedule[0]->start) && !empty($query->posts[$key+1]->ec3_schedule[0]->start)) {
+        if ( $value->ec3_schedule[0]->start > $query->posts[$key+1]->ec3_schedule[0]->start ) {
+          $temp = $query->posts[$key];
+          $query->posts[$key] = $query->posts[$key+1];
+          $query->posts[$key+1] = $temp;
+          $trie = false;
+        }
+      }
+    }
+  }
+  
+  return $query;
+}

@@ -197,6 +197,12 @@ function Ec3EditForm()
 				selects[i].name += trs.length - 3;
 				selects[i].id = selects[i].name;
 			}
+
+			var textarea = new_tr.getElementsByTagName('textarea');
+			for (var i = 0; i < textarea.length; i++) {
+				textarea[i].name += trs.length - 3;
+				textarea[i].id = textarea[i].name;
+			}
 			
 			var inputs = new_tr.getElementsByTagName('input');
 			for (var i = 0; i < inputs.length; i++)
@@ -349,6 +355,13 @@ function Ec3EditForm()
         for(var i=0; i<buttons.length; i++)
         {
           buttons[i].id+=trs.length-3;
+        }
+
+        var textareas=new_tr.getElementsByTagName('textarea');                         
+        for(var i=0; i<textareas.length; i++)
+        {
+          textareas[i].name+=trs.length-3;	
+          textareas[i].id=textareas[i].name
         }
 
         new_tr.style.display=trs[0].style.display;

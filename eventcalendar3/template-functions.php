@@ -58,7 +58,7 @@ define('EC3_DEFAULT_FORMAT_SINGLE',
        '<tr class="%2$s"><td colspan="3">%1$s</td></tr>');
 define('EC3_DEFAULT_FORMAT_RANGE',
        '<tr class="%4$s"><td class="ec3_start">%1$s</td>'
-         . '<td class="ec3_to">%3$s</td><td class="ec3_end">%2$s</td></tr>');
+         . '<td class="ec3_to">%3$s</td><td class="ec3_end">%2$s %5$s</td></tr>');
 define('EC3_DEFAULT_FORMAT_WRAPPER','<table class="ec3_schedule">%s</table>');
 
 /** Echos the schedule for the current post. */

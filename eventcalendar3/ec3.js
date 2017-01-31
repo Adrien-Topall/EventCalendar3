@@ -356,7 +356,7 @@ ec3.Calendar.prototype = {
     {
       //console.log(month_num);
       //onsole.log(year_num);
-      var req=new XMLHttpRequest();
+      var req = new XMLHttpRequest();
       if(req)
       {
         //console.log(ec3.home);
@@ -529,6 +529,7 @@ ec3.Calendar.prototype = {
    *  updates calendar days. */
   process_xml : function()
     {
+      
       var busy=0;
       for(var i=0; i<this.reqs.length; i++)
       {
@@ -540,7 +541,6 @@ ec3.Calendar.prototype = {
             this.reqs[i]=0;
             if(req.status==200)
               this.update_days( new ec3.xml.Calendar(req.responseXML) );
-              console.log(this.update_days);
           }
           else
             busy=1;
@@ -561,7 +561,7 @@ ec3.Calendar.prototype = {
     {
       for(var i=0, len=xcal.day.length; i<len; i++)
       {
-        var td=this.getElementById(xcal.day[i].id());
+        var td = this.getElementById(xcal.day[i].id());
         if(td && td.ec3_daynum)
         {
           this.update_day(td,xcal.day[i]);

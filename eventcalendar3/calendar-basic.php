@@ -241,20 +241,34 @@ class ec3_BasicCalendar
   {
     global $ec3;
     $result = array();
+    $listeIdPost = array();
     if(!empty($this->dayobj))
     {
-      for($evt=$this->dayobj->iter_events_allday(); $evt->valid(); $evt->next())
+      for($evt=$this->dayobj->iter_events_allday(); $evt->valid(); $evt->next()){
+        $idPost = get_the_ID();
+        if (!in_array( $idPost, $listeIdPost )){
+          array_push($listeIdPost, $idPost);
           $result[] = $this->make_event_allday($ec3->event);
-
-      for($evt=$this->dayobj->iter_events(); $evt->valid(); $evt->next())
+        }
+      }
+          
+      for($evt=$this->dayobj->iter_events(); $evt->valid(); $evt->next()){
+        $idPost = get_the_ID();
+        if (!in_array( $idPost, $listeIdPost )){
+          array_push($listeIdPost, $idPost);
           $result[] = $this->make_event($ec3->event);
+        }
+      }
 
       foreach($this->dayobj->_posts as $p)
       {
         global $post;
-        $post = get_post($p->ID);
-        setup_postdata($post);
-        $result[] = $this->make_post($post);
+        if (!in_array( $p->ID, $listeIdPost )) {
+          array_push($listeIdPost, $p->ID);
+          $post = get_post($p->ID);
+          setup_postdata($post);
+          $result[] = $this->make_post($post);
+        }
       }
     }
     return $result;
@@ -307,6 +321,9 @@ class ec3_BasicCalendar
         $datetime    =  $curr_dateobj->to_mysqldate();
         if ( isset($this->_days[$datetime]) ) {
           $this->dayobj=  $this->_days[$datetime]; // might be empty
+        }
+        else{
+          $this->dayobj = '';
         }
         //$this->dayobj=  $this->_days[$datetime]; // might be empty
         $dayarr      =  $this->make_day();

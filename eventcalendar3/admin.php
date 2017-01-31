@@ -863,14 +863,14 @@ class ec3_Admin
             <input type="text" name="OpenAgandaSecretKey" value="<?php echo $OpenAgandaSecretKey; ?>" size="40">
           </td>
         </tr>
-        <tr valign="top">
-          <th width="33%" scope="row"><?php _e('Synchroniser avec Open Agenda','ec3'); ?>:</th>
+        <!--<tr valign="top">
+          <th width="33%" scope="row"><?php //_e('Synchroniser avec Open Agenda','ec3'); ?>:</th>
           <td class="row_option">
             <button id="syncNow">Synchroniser Maintenant</button>
             <div id="reponseA"></div>
-            <p><?php print_r($ec3->tz); ?></p>
+            <p><?php //print_r($ec3->tz); ?></p>
           </td>
-        </tr>
+        </tr>-->
      </table>
 
     <script>

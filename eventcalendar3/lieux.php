@@ -11,9 +11,6 @@ function cree_page_lieux_content(){
 
 	// En cas de besoin pour faire des moulinette 
 	if (isset($_GET['updateBdd'])) {
-
-		
-
 		// réinport des options dans schedule
 		/*$status = $wpdb->get_results("SELECT * FROM $table_opt");
 	    foreach ($status as $key => $value) {
@@ -35,7 +32,10 @@ function cree_page_lieux_content(){
       $lieu = $_POST['lieu'];
       $adresse = $_POST['adresse'];
 
-      $wpdb->insert( $table_lieux, array( 'departement' => $departement, 'nom_ville' => $ville, 'nom_lieux' => $lieu, 'adresse' => $adresse, 'longitude' => '', 'latitude' => '' ), array( '%s', '%s', '%s', '%s', '%f', '%f' ) );
+
+      $wpdb->insert( $table_lieux, array( 'departement' => $departement, 'nom_ville' => $ville, 'nom_lieux' => $lieu, 'adresse' => $adresse, 'longitude' => 0, 'latitude' => 0, 'lieux_uid' => 0 ) );
+   		
+   	
     }
 
     // modifie un lieux envoyer par le formulaire
@@ -47,7 +47,7 @@ function cree_page_lieux_content(){
       $adresse = $_POST['adresse'];
       $lieu_id = $_POST['edit'];
 
-      $wpdb->update( $table_lieux, array( 'departement' => $departement, 'nom_ville' => $ville, 'nom_lieux' => $lieu, 'adresse' => $adresse, 'longitude' => '', 'latitude' => '' ), array( 'lieux_id' => $lieu_id ), array( '%s', '%s', '%s', '%s', '%f', '%f' ) );
+      $wpdb->update( $table_lieux, array( 'departement' => $departement, 'nom_ville' => $ville, 'nom_lieux' => $lieu, 'adresse' => $adresse, 'longitude' => '', 'latitude' => '', 'lieux_uid' => '' ), array( 'lieux_id' => $lieu_id ), array( '%s', '%s', '%s', '%s', '%f', '%f', '%d' ) );
     }
 
 	?><h2>Lieux <a href="/wp-admin/admin.php?page=lieux&action=new" class="add-new-h2">ajouter</a>
@@ -99,7 +99,7 @@ function cree_page_lieux_content(){
 			        <table>
 			          <tr>
 			            <td><label for="departement">Numéro du département :</label></td>
-			            <td><input type="text" id="departement" name="departement" value="<?php echo $info_lieu->departement; ?>" placeholder="Departement" ></td>
+			            <td><input type="text" id="departement" name="departement" value="<?php echo $info_lieu->departement; ?>" placeholder="Departement" maxlength="3" ></td>
 			          </tr>
 			          <tr>
 			            <td><label for="ville">Ville :</label></td>

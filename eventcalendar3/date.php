@@ -198,7 +198,10 @@ class ec3_Date
 //      if($show_only_events)
 //        $daylink .= '?ec3_listing=events';
 //    } else {
-      $daylink=apply_filters('day_link', get_option('home') . '/?m=' . $year . zeroise($month, 2) . zeroise($day, 2), $year, $month, $day);
+      //$daylink=apply_filters('day_link', get_option('home') . '/?m=' . $year . zeroise($month, 2) . zeroise($day, 2), $year, $month, $day);
+      //$daylink .= '&amp;ec3_listing=events';
+
+      $daylink = home_url() . '/toutes-les-dates/?date=' . $year . zeroise($month, 2) . zeroise($day, 2);
       /*if($show_only_events)
         $daylink .= '&amp;ec3_listing=events';*/
 //    }
@@ -234,7 +237,10 @@ class ec3_Date
 //      if($show_only_events)
 //        $monthlink .= '?ec3_listing=events';
 //    } else {
-      $monthlink = apply_filters('month_link', get_option('home') . '/?m=' . $year . zeroise($month, 2), $year, $month);
+      //$monthlink = apply_filters('month_link', get_option('home') . '/?m=' . $year . zeroise($month, 2), $year, $month);
+      
+      $monthlink = home_url() . '/toutes-les-dates/?date=' . $year . zeroise($month, 2);
+
       /*if($show_only_events)
         $monthlink .= '&amp;ec3_listing=events';*/
 //    }

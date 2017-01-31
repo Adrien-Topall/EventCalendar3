@@ -81,8 +81,7 @@ class ec3_EventListWidget extends MultiWidget
             $current_date=$date;
           }
           // Print the event.
-          echo ' <li><a href="'.get_permalink().'">'
-            .  get_the_title().' ('.ec3_get_start_time().')</a></li>'."\n";
+          echo ' <li><small>' . ec3_get_start_time(). ' > ' . ec3_get_end_time() . '</small><a href="'.get_permalink().'">' . get_the_title().'</a> <small>' . ec3_get_infos()  .'</small></li>'."\n";
         }
         if($current_date)
             echo "</ul></li>\n";
