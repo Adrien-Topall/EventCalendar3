@@ -1225,7 +1225,7 @@ function sync_post_callback() {
       }
       update_post_meta( $id_post, 'syncOrNot', $syncOrNot );
   
-    echo "syncOk - " . $imageUrl;
+    echo "syncOk";
     wp_die();
     }
 
